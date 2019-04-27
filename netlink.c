@@ -21,8 +21,8 @@ static struct hrtimer hr_timer;
 static ktime_t interval;
 static struct task_struct *thread1;
 static struct sock *socket_ptr = NULL;
-long prev_idle=0;
-long prev_total=0;
+long prev_idle = 0;
+long prev_total = 0;
 
 struct sched_param {
 	int sched_priority;
@@ -54,6 +54,7 @@ struct netlink_kernel_cfg cfg = {
 };
 
 static int init_proc_stat_buffer(char* buffer, int size) {
+	printk(KERN_INFO "init_proc_stat_buffer");
 	buffer = kmalloc_array(sizeof(char*), size, GFP_KERNEL);
     if (!buffer) {
     	printk(KERN_ALERT "Allocation error!!.\n");
@@ -63,6 +64,7 @@ static int init_proc_stat_buffer(char* buffer, int size) {
 }
 
 static int init_proc_stat_token(char* token) {
+	printk(KERN_INFO "init_proc_stat_token");
 	token = kmalloc(sizeof(char*), GFP_KERNEL);
     if (!token) {
     	printk(KERN_ALERT "Allocation error!!.\n");
@@ -113,11 +115,13 @@ static int thread_fn(void * data) {
     long idle;
     long split;
     long long percentage=0;*/
-
     socket_ptr = netlink_kernel_create(&init_net, NETLINK_TEST, &cfg);
+    printk(KERN_INFO "link created");
+
     if (init_global()==-1) {
     	return 0;
     }
+    printk(KERN_INFO "init_global");
     
 	while (!kthread_should_stop()){ 
 		set_current_state(TASK_INTERRUPTIBLE);
