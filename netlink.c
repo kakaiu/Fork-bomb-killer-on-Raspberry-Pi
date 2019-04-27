@@ -75,7 +75,7 @@ static int do_analysis_proc_stat(void) {
 		set_fs(fs);
 		filp_close(f, NULL);
 
-		while( (token = strsep(buffer, d)) != NULL &&i<10){
+		while( (token = strsep(&buffer, d)) != NULL &&i<10){
 			printk(KERN_INFO "%s %d \n",token,i);
 			if(i!=0 && i!=1){
 				ret=kstrtol(token,10,&split);
