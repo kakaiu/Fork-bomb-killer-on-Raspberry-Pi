@@ -109,10 +109,6 @@ static int get_proc_stat(char* buffer, int size) {
 
 //https://stackoverflow.com/questions/1184274/read-write-files-within-a-linux-kernel-module
 static int thread_fn(void * data) {
-    char* token;
-    char* buffer;
-    int buffer_size = buffer_size;
-
     /*long total;
     long total_idle;
     long idle;
