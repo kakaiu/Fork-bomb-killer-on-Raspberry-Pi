@@ -82,7 +82,7 @@ static int do_analysis_proc_stat(int threshold) {
 	char *cur;
 
 	f = filp_open("/proc/stat", O_RDONLY, 0);
-	if(!f){
+	if(f==NULL){
 		printk(KERN_ALERT "do_analysis_proc_stat filp_open error!!");
 		filp_close(f, NULL);
 		return -1;
@@ -147,8 +147,8 @@ static int killer(void) {
 	//char *cur;
 	char buffer[BUFFER_SIZE] = {'\0'};
 	mm_segment_t fs;
-	f = filp_open("force_run.txt", O_RDONLY, 0);
-	if(!f){
+	f = filp_open("/proc/stat", O_RDONLY, 0);
+	if(f==NULL){
 		printk(KERN_ALERT "killer filp_open error!!");
 		filp_close(f, NULL);
 		return -1;
