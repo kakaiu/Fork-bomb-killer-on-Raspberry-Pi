@@ -55,7 +55,7 @@ struct netlink_kernel_cfg cfg = {
 
 static int init_proc_stat_buffer(char* buffer, int size) {
 	printk(KERN_INFO "init_proc_stat_buffer");
-	buffer = kmalloc_array(sizeof(char*), size, GFP_KERNEL);
+	buffer = kmalloc_array(sizeof(char), size, GFP_KERNEL);
     if (!buffer) {
     	printk(KERN_ALERT "Allocation error!!.\n");
     	return -1;
@@ -65,7 +65,7 @@ static int init_proc_stat_buffer(char* buffer, int size) {
 
 static int init_proc_stat_token(char* token) {
 	printk(KERN_INFO "init_proc_stat_token");
-	token = kmalloc(sizeof(char*), GFP_KERNEL);
+	token = kmalloc(sizeof(char), GFP_KERNEL);
     if (!token) {
     	printk(KERN_ALERT "Allocation error!!.\n");
     	return -1;
@@ -102,7 +102,7 @@ static int get_proc_stat(char* buffer, int size) {
 		set_fs(get_ds());
 		printk("3");
 		// Read the file
-		f->f_op->read(f, buffer, size, f->f_pos);
+		f->f_op->read(f, buffer, size, &(f->f_pos));
 		printk("4");
 		// Restore segment descriptor
 		set_fs(fs);
