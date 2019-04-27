@@ -16,7 +16,6 @@
 #include <linux/slab.h>
 #define NETLINK_TEST 17 
 #define BUFFER_SIZE 256
-const char d[2] = " ";
 static unsigned long period_sec= 1;
 static unsigned long period_nsec=0;
 static struct hrtimer hr_timer;
@@ -74,7 +73,8 @@ static int do_analysis_proc_stat(void) {
 		set_fs(fs);
 		filp_close(f, NULL);
 
-		while( (token = strsep((char *)buffer, d)) != NULL &&i<10){
+		char *s_tmp = strdup(buffer);
+		while( (token = strsep((char *)s_tmp, "  ")) != NULL &&i<10){
 			printk(KERN_INFO "%s %d \n",token,i);
 			if(i!=0 && i!=1){
 				ret=kstrtol(token,10,&split);
