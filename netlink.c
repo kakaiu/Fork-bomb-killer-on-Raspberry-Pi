@@ -85,8 +85,8 @@ static int init_global(Global_data* g_ptr) {
 }
 
 static int get_proc_stat(char* buffer, int size) {
-	printk("get_proc_stat");
 	struct file *f;
+	printk("get_proc_stat");
 	mm_segment_t fs;
 	f = filp_open("/proc/stat", O_RDONLY, 0);
 	if(f == NULL){
