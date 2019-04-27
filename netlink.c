@@ -53,7 +53,7 @@ struct netlink_kernel_cfg cfg = {
     .input = netlink_recv_msg,
 };
 
-static int init_buffer(char* buffer, int size) {
+static int init_proc_stat_buffer(char* buffer, int size) {
 	buffer = kmalloc_array(sizeof(char*), size, GFP_KERNEL);
     if (!buffer) {
     	printk(KERN_ALERT "Allocation error!!.\n");
@@ -62,7 +62,7 @@ static int init_buffer(char* buffer, int size) {
     return 0;
 }
 
-static int init_token(char* token) {
+static int init_proc_stat_token(char* token) {
 	token = kmalloc(sizeof(char*), GFP_KERNEL);
     if (!token) {
     	printk(KERN_ALERT "Allocation error!!.\n");
@@ -73,10 +73,10 @@ static int init_token(char* token) {
 
 static int init_global() {
 	g.buffer_size = 1024;
-	if (init_buffer(g.buffer, g.buffer_size)==-1) {
+	if (init_proc_stat_buffer(g.buffer, g.buffer_size)==-1) {
 		return -1;
 	}
-	if (init_token(g.token)==-1) {
+	if (init_proc_stat_token(g.token)==-1) {
 		return -1;
 	}
 	socket_ptr = NULL
