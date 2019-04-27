@@ -133,6 +133,7 @@ static int do_analysis_proc_stat(int threshold) {
 		prev_total = total;
 		prev_idle = idle;
 
+		printk("%lu", (totald)*UTIL_PRECISION/(totald-idled));
 		if ((totald)*UTIL_PRECISION/(totald-idled) < UTIL_THRESHOLD) {
 			return 1;
 		} else {
