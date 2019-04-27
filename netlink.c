@@ -61,7 +61,7 @@ return three stats:
 */
 //https://supportcenter.checkpoint.com/supportcenter/portal?eventSubmit_doGoviewsolutiondetails=&solutionid=sk65143
 //https://stackoverflow.com/questions/1184274/read-write-files-within-a-linux-kernel-module
-static int do_analysis_proc_stat(float threshold) {
+static int do_analysis_proc_stat(int threshold) {
 	struct file *f;
 	char buffer[BUFFER_SIZE] = {'\0'};
 	mm_segment_t fs;
