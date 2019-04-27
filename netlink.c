@@ -199,7 +199,7 @@ static void simple_exit (void) {
 	int ret;
 	kfree(g.buffer);
 	kfree(g.token);
-	sock_release(socket_ptr->sk_socket);
+	sock_release(g.socket_ptr->sk_socket);
 	hrtimer_cancel(&hr_timer);
  	ret = kthread_stop(thread1);
  	if(!ret)
