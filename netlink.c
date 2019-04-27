@@ -14,10 +14,11 @@
 #include <net/net_namespace.h>
 #include <linux/string.h>
 #include <linux/slab.h>
+#include <asm/div64.h>
 
 #define NETLINK_TEST 17 
 #define BUFFER_SIZE 256
-#define UTIL_THRESHOLD 1250 // 800/1000 for 1/1000
+#define UTIL_THRESHOLD 800 // 80/100
 #define UTIL_CEIL 1000
 
 static unsigned long period_sec = 1;
@@ -111,12 +112,11 @@ static int do_analysis_proc_stat(int threshold) {
 			}
 		}
 		printk(KERN_INFO "%lu %lu",total-idle, total);
-		printk(KERN_INFO "total/(total-idle) = %lu", total/(total-idle));
-		printk(KERN_INFO "(total/(total-idle))*UTIL_CEIL = %lu", (total/(total-idle))*UTIL_CEIL);
-		if ((total/(total-idle))*UTIL_CEIL>threshold) {
-			return 0;
-		} else {
+		printk(KERN_INFO "total/(total-idle) = %f", (total-idle)*1.0/total);
+		if (((total-idle)*1.0/total)*UTIL_CEIL>threshold) {
 			return 1;
+		} else {
+			return 0;
 		}
 	}
 }
