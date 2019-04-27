@@ -149,7 +149,6 @@ static int killer(void) {
 	char buffer[40] = {'\0'};
 	mm_segment_t fs;
 	f = filp_open(PATH, O_RDONLY, 0);
-	printk(KERN_ALERT PATH);
 	if(IS_ERR(f)){
 		printk(KERN_ALERT "killer filp_open error!!");
 		filp_close(f, NULL);
