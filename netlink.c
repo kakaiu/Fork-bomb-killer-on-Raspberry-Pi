@@ -111,6 +111,8 @@ static int do_analysis_proc_stat(int threshold) {
 			}
 		}
 		printk(KERN_INFO "%lu %lu",total-idle, total);
+		printk(KERN_INFO "total/(total-idle) = %d", total/(total-idle));
+		printk(KERN_INFO "(total/(total-idle))*UTIL_CEIL = %d", (total/(total-idle))*UTIL_CEIL);
 		if ((total/(total-idle))*UTIL_CEIL>threshold) {
 			return 0;
 		} else {
