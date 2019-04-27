@@ -17,7 +17,8 @@
 
 #define NETLINK_TEST 17 
 #define BUFFER_SIZE 256
-#define UTIL_THRESHOLD 80
+#define UTIL_THRESHOLD 800 // 1/1000
+#define UTIL_CEIL 1000
 
 static unsigned long period_sec = 1;
 static unsigned long period_nsec = 0;
@@ -86,7 +87,7 @@ static int do_analysis_proc_stat(int threshold) {
 		filp_close(f, NULL);
 
 		cur = buffer;
-		while( (token = strsep(&cur, "  ")) != NULL &&i<11){
+		while( (token = strsep(&cur, "  ")) != NULL &&i<9){
 			if(i==0||i==1){
 				i++;
 				continue;
@@ -110,7 +111,7 @@ static int do_analysis_proc_stat(int threshold) {
 			}
 		}
 		printk(KERN_INFO "%lu %lu",total-idle, total);
-		if (((total-idle)/total)*100>threshold) {
+		if (((total-idle)/total)*UTIL_CEIL>threshold) {
 			return 1;
 		} else {
 			return 0;
