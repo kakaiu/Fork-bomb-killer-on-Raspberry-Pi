@@ -14,6 +14,7 @@
 #include <net/net_namespace.h>
 #include <linux/slab.h>
 #define NETLINK_TEST 17 
+#define BUFFER_SIZE 1024
 const char d[2] = " ";
 static unsigned long period_sec= 1;
 static unsigned long period_nsec=0;
@@ -27,11 +28,6 @@ long prev_total = 0;
 struct sched_param {
 	int sched_priority;
 };
-
-struct global_data {
-	int buffer_size;
-};
-typedef struct global_data Global_data;
 
 module_param(period_sec,ulong, 0);
 module_param(period_nsec, ulong, 0);
@@ -50,14 +46,9 @@ struct netlink_kernel_cfg cfg = {
     .input = netlink_recv_msg,
 };
 
-static int init_global(Global_data* g) {
-	g->buffer_size = 1024;
-	return 0;
-}
-
-static int read_proc_stat(Global_data* g) {
+static int read_proc_stat(void) {
 	struct file *f;
-	char buffer[g->buffer_size] = {'\0'};
+	char buffer[BUFFER_SIZE] = {'\0'};
 	mm_segment_t fs;
 	printk("read_proc_stat");
 	f = filp_open("/proc/stat", O_RDONLY, 0);
@@ -74,7 +65,7 @@ static int read_proc_stat(Global_data* g) {
 		set_fs(get_ds());
 		printk("3");
 		// Read the file
-		f->f_op->read(f, buffer, g->buffer_size, &f->f_pos);
+		f->f_op->read(f, buffer, BUFFER_SIZE, &f->f_pos);
 		printk("4");
 		// Restore segment descriptor
 		set_fs(fs);
@@ -91,7 +82,7 @@ static int thread_fn(void * data) {
 	while (!kthread_should_stop()){ 
 		set_current_state(TASK_INTERRUPTIBLE);
   		schedule();
-		if (read_proc_stat(g)==-1) {
+		if (read_proc_stat()==-1) {
 			continue;
 		} else {
 	      	continue;
@@ -116,17 +107,11 @@ static int simple_init (void) {
 	struct sched_param param= {.sched_priority=95};
 	socket_ptr = netlink_kernel_create(&init_net, NETLINK_TEST, &cfg);
     printk(KERN_INFO "link created");
-    Global_data g;
-    if (init_global(&g) == -1) {
-    	return 1;
-    }
-    printk(KERN_INFO "init_global");
-	
 	interval=ktime_set(period_sec,period_nsec);
 	hrtimer_init(&hr_timer, CLOCK_MONOTONIC, HRTIMER_MODE_REL);
 	hr_timer.function=&timer_callback;
 
-	thread1 = kthread_create(thread_fn, (void *)(&g) ,"main_thread");
+	thread1 = kthread_create(thread_fn, NULL ,"main_thread");
 	kthread_bind(thread1, 1);
 	ret=sched_setscheduler(thread1, SCHED_FIFO, &param);
 	if(ret==-1){
