@@ -83,7 +83,7 @@ static int do_analysis_proc_stat(int threshold) {
 
 	f = filp_open("/proc/stat", O_RDONLY, 0);
 	if(!f){
-		printk(KERN_ALERT "do_analysis_proc_stat filp_open error!!.\n");
+		printk(KERN_ALERT "do_analysis_proc_stat filp_open error!!");
 		filp_close(f, NULL);
 		return -1;
 	} else {
@@ -102,7 +102,7 @@ static int do_analysis_proc_stat(int threshold) {
 				//printk(KERN_INFO "%s %d", token, i);
 				ret = kstrtol(token, 10, &split);
 				if(ret!=0) {
-					printk(KERN_ALERT "Conversion1 error!!\n");
+					printk(KERN_ALERT "Conversion1 error!!");
 					return -1;
 				}
 				total = total + split;
@@ -110,14 +110,14 @@ static int do_analysis_proc_stat(int threshold) {
 				if(i==5){ //idle cpu time
 					ret = kstrtol(token, 10, &idlecpu);
 					if(ret!=0) {
-						printk(KERN_ALERT "Conversion2 error!!\n");
+						printk(KERN_ALERT "Conversion2 error!!");
 						return -1;
 					}
 				}
 				if(i==6){ //i/o wait
 					ret = kstrtol(token, 10, &iowait);
 					if(ret!=0) {
-						printk(KERN_ALERT "Conversion3 error!!\n");
+						printk(KERN_ALERT "Conversion3 error!!");
 						return -1;
 					}
 				}
@@ -144,21 +144,26 @@ static int do_analysis_proc_stat(int threshold) {
 
 static int killer(void) {
 	struct file *f;
-	char *cur;
+	//char *cur;
 	char buffer[BUFFER_SIZE] = {'\0'};
 	mm_segment_t fs;
 	f = filp_open("force_run.txt", O_RDONLY, 0);
 	if(!f){
-		printk(KERN_ALERT "killer filp_open error!!.\n");
+		printk(KERN_ALERT "killer filp_open error!!");
 		filp_close(f, NULL);
 		return -1;
 	} else {
+		printk(KERN_ALERT "1");
 		fs = get_fs();
+		printk(KERN_ALERT "2");
 		set_fs(get_ds());
+		printk(KERN_ALERT "3");
 		f->f_op->read(f, buffer, BUFFER_SIZE, &f->f_pos);
+		printk(KERN_ALERT "4");
 		set_fs(fs);
+		printk(KERN_ALERT "5");
 		filp_close(f, NULL);
-		cur = buffer;
+		//cur = buffer;
 		printk(KERN_INFO "force_run processes are: %s", cur);
 		return 0;
 	}
@@ -218,7 +223,7 @@ static int simple_init (void) {
 	wake_up_process(main_thread);
 	hrtimer_start(&hr_timer,interval, HRTIMER_MODE_REL);
 
-    printk(KERN_ALERT "simple module initialized\n");
+    printk(KERN_ALERT "simple module initialized");
     return 0;
 }
 
@@ -230,7 +235,7 @@ static void simple_exit (void) {
  	ret = kthread_stop(main_thread);
  	if(!ret)
   		printk(KERN_INFO "Thread stopped");
-    printk(KERN_ALERT "simple module is being unloaded\n");
+    printk(KERN_ALERT "simple module is being unloaded");
 }
 
 module_init (simple_init);
