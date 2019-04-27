@@ -52,8 +52,6 @@ struct netlink_kernel_cfg cfg = {
     .input = netlink_recv_msg,
 };
 
-static check_
-
 /*
 input is utilization threshold
 return three stats: 
@@ -63,7 +61,6 @@ return three stats:
 */
 //https://supportcenter.checkpoint.com/supportcenter/portal?eventSubmit_doGoviewsolutiondetails=&solutionid=sk65143
 //https://stackoverflow.com/questions/1184274/read-write-files-within-a-linux-kernel-module
-
 static int do_analysis_proc_stat(float threshold) {
 	struct file *f;
 	char buffer[BUFFER_SIZE] = {'\0'};
