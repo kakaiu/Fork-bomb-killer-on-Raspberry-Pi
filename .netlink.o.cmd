@@ -1121,6 +1121,44 @@ deps_/tmp/compile/zhe.wang/final_project/netlink.o := \
   include/linux/buffer_head.h \
   include/linux/pagemap.h \
   include/linux/hugetlb_inline.h \
+  include/linux/init_task.h \
+  include/linux/utsname.h \
+    $(wildcard include/config/uts/ns.h) \
+    $(wildcard include/config/proc/sysctl.h) \
+  include/uapi/linux/utsname.h \
+  include/linux/ftrace.h \
+    $(wildcard include/config/function/tracer.h) \
+    $(wildcard include/config/dynamic/ftrace/with/regs.h) \
+    $(wildcard include/config/dynamic/ftrace.h) \
+    $(wildcard include/config/stack/tracer.h) \
+    $(wildcard include/config/function/profiler.h) \
+    $(wildcard include/config/ftrace/syscalls.h) \
+  include/linux/trace_clock.h \
+  arch/arm/include/generated/asm/trace_clock.h \
+  include/asm-generic/trace_clock.h \
+  include/linux/kallsyms.h \
+  include/linux/ptrace.h \
+  include/linux/sched/signal.h \
+    $(wildcard include/config/sched/autogroup.h) \
+    $(wildcard include/config/bsd/process/acct.h) \
+    $(wildcard include/config/taskstats.h) \
+  include/linux/signal.h \
+  include/linux/sched/jobctl.h \
+  include/linux/sched/task.h \
+    $(wildcard include/config/have/copy/thread/tls.h) \
+    $(wildcard include/config/have/exit/thread.h) \
+    $(wildcard include/config/arch/wants/dynamic/task/struct.h) \
+  include/linux/pid_namespace.h \
+    $(wildcard include/config/pid/ns.h) \
+  include/uapi/linux/ptrace.h \
+  arch/arm/include/asm/ftrace.h \
+    $(wildcard include/config/old/mcount.h) \
+  include/linux/securebits.h \
+  include/uapi/linux/securebits.h \
+  include/linux/sched/autogroup.h \
+  include/linux/sched/rt.h \
+  include/linux/livepatch.h \
+    $(wildcard include/config/have/reliable/stacktrace.h) \
 
 /tmp/compile/zhe.wang/final_project/netlink.o: $(deps_/tmp/compile/zhe.wang/final_project/netlink.o)
 
