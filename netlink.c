@@ -48,7 +48,7 @@ struct netlink_kernel_cfg cfg = {
 };
 
 //https://supportcenter.checkpoint.com/supportcenter/portal?eventSubmit_doGoviewsolutiondetails=&solutionid=sk65143
-static float get_idle_percentage(char text[BUFFER_SIZE]) {
+static float get_idle_percentage(char* text) {
 	long idle = 0;
 	long total = 0;
 	long split;
@@ -57,7 +57,7 @@ static float get_idle_percentage(char text[BUFFER_SIZE]) {
 	int ret;
 	char* token;
 	printk(KERN_INFO "buf:%s", text);
-	while( (token = strsep(&text, d)) != NULL &&i<10){
+	while( (token = strsep(text, d)) != NULL &&i<10){
 		printk(KERN_INFO "%s %d \n",token,i);
 		if(i!=0&&i!=1){
 			ret=kstrtol(token,10,&split);
