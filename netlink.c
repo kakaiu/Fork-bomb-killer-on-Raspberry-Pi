@@ -14,7 +14,6 @@
 #include <net/net_namespace.h>
 #include <linux/string.h>
 #include <linux/slab.h>
-#include <asm/div64.h>
 
 #define NETLINK_TEST 17 
 #define BUFFER_SIZE 256
@@ -24,6 +23,9 @@
 static unsigned long period_sec = 1;
 static unsigned long period_nsec = 0;
 static unsigned long test = UTIL_THRESHOLD; //for test
+
+long prev_idle = 0;
+long prev_total = 0;
 
 static struct hrtimer hr_timer;
 static ktime_t interval;
@@ -68,7 +70,11 @@ static int do_analysis_proc_stat(int threshold) {
 	char buffer[BUFFER_SIZE] = {'\0'};
 	mm_segment_t fs;
 	long idle = 0;
+	long idlecpu = 0;
+	long iowait = 0;
 	long total = 0;
+	long totald = 0;
+	long idled = 0;
 	long split;
 	int i = 0;
 	int ret;
@@ -101,8 +107,15 @@ static int do_analysis_proc_stat(int threshold) {
 				}
 				total = total + split;
 
-				if(i==5){ //idle; assuming i/o wait is not idle
-					ret = kstrtol(token, 10, &idle);
+				if(i==5){ //idle cpu time
+					ret = kstrtol(token, 10, &idlecpu);
+					if(ret!=0) {
+						printk(KERN_ALERT "Conversion2 error!!\n");
+						return -1;
+					}
+				}
+				if(i==6){ //i/o wait
+					ret = kstrtol(token, 10, &iowait);
 					if(ret!=0) {
 						printk(KERN_ALERT "Conversion2 error!!\n");
 						return -1;
@@ -111,9 +124,16 @@ static int do_analysis_proc_stat(int threshold) {
 				i++;
 			}
 		}
-		printk(KERN_INFO "%lu %lu",total-idle, total);
-		printk(KERN_INFO "total/(total-idle) = %f", (total-idle)*1.0/total);
-		if (((total-idle)*1.0/total)*UTIL_CEIL>threshold) {
+		idle = idlecpu + iowait;
+		totald = total - prev_total;
+		idled = idle - prev_idle;
+
+		printk(KERN_INFO "%lu %lu", totald-idled, totald);
+
+		prev_total = total;
+		prev_idle = idle;
+
+		if (1) {
 			return 1;
 		} else {
 			return 0;
