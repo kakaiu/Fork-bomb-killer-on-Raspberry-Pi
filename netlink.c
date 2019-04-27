@@ -143,13 +143,18 @@ static int do_analysis_proc_stat(int threshold) {
 	}
 }
 
-//Do not directly use f->ops->read and use kernel_read instead, see
-//https://stackoverflow.com/questions/1184274/read-write-files-within-a-linux-kernel-module
+/*
+Do not directly use f->ops->read and use kernel_read instead, see
+https://stackoverflow.com/questions/1184274/read-write-files-within-a-linux-kernel-module
+*/
 static int killer(void) {
 	struct file *f;
-	char *cur;
-	char buffer[40] = {'\0'};
+	char buffer[BUFFER_SIZE] = {'\0'};
 	mm_segment_t fs;
+
+	char *cur;
+	char* token;
+
 	f = filp_open(PATH, O_RDONLY, 0);
 	if(IS_ERR(f)){
 		printk(KERN_ALERT "killer filp_open error!!");
@@ -162,7 +167,11 @@ static int killer(void) {
 		set_fs(fs);
 		filp_close(f, NULL);
 		cur = buffer;
-		printk(KERN_INFO "force_run processes are: %s", cur);
+		
+		while( (token = strsep(&cur, " ")) != NULL){
+			printk(KERN_INFO "%s", token);
+		}
+		printk(KERN_INFO "DONE.");
 		return 0;
 	}
 }
