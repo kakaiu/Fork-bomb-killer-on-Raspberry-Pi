@@ -15,7 +15,7 @@
 #include <linux/string.h>
 #include <linux/slab.h>
 #define NETLINK_TEST 17 
-#define BUFFER_SIZE 1024
+#define BUFFER_SIZE 256
 const char d[2] = " ";
 static unsigned long period_sec= 1;
 static unsigned long period_nsec=0;
@@ -49,8 +49,9 @@ struct netlink_kernel_cfg cfg = {
 
 //https://supportcenter.checkpoint.com/supportcenter/portal?eventSubmit_doGoviewsolutiondetails=&solutionid=sk65143
 //https://stackoverflow.com/questions/1184274/read-write-files-within-a-linux-kernel-module
-static int do_analysis_proc_stat(char* buffer, char* token) {
+static int do_analysis_proc_stat(void) {
 	struct file *f;
+	char buffer[BUFFER_SIZE] = {'\0'};
 	mm_segment_t fs;
 
 	long idle = 0;
@@ -59,6 +60,7 @@ static int do_analysis_proc_stat(char* buffer, char* token) {
     float percentage = 0;
 	int i = 0;
 	int ret;
+	char* token;
 
 	f = filp_open("/proc/stat", O_RDONLY, 0);
 	if(!f){
@@ -72,7 +74,7 @@ static int do_analysis_proc_stat(char* buffer, char* token) {
 		set_fs(fs);
 		filp_close(f, NULL);
 
-		while( (token = strsep(buffer, d)) != NULL &&i<10){
+		while( (token = strsep(&buffer, d)) != NULL &&i<10){
 			printk(KERN_INFO "%s %d \n",token,i);
 			if(i!=0 && i!=1){
 				ret=kstrtol(token,10,&split);
@@ -94,21 +96,10 @@ static int do_analysis_proc_stat(char* buffer, char* token) {
 }
 
 static int thread_fn(void * data) {
-	char* token;
-    char* buffer;
-	token = kmalloc(sizeof(char*), GFP_KERNEL);
-    if (!token) {
-    	printk(KERN_ALERT "Allocation error!!.\n");
-    }
-    buffer = kmalloc_array(sizeof(char*), BUFFER_SIZE, GFP_KERNEL);
-    if (!buffer) {
-    	printk(KERN_ALERT "Allocation error!!.\n");
-    }
-
 	while (!kthread_should_stop()){ 
 		set_current_state(TASK_INTERRUPTIBLE);
   		schedule();
-		do_analysis_proc_stat(buffer, token);
+		do_analysis_proc_stat();
 	}
 	return 0;
 }
