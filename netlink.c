@@ -12,6 +12,7 @@
 #include <linux/netlink.h>
 #include <linux/buffer_head.h>
 #include <net/net_namespace.h>
+#include <linux/string.h>
 #include <linux/slab.h>
 #define NETLINK_TEST 17 
 #define BUFFER_SIZE 1024
@@ -46,12 +47,44 @@ struct netlink_kernel_cfg cfg = {
     .input = netlink_recv_msg,
 };
 
+//https://supportcenter.checkpoint.com/supportcenter/portal?eventSubmit_doGoviewsolutiondetails=&solutionid=sk65143
+static float get_idle_percentage(char text[BUFFER_SIZE]) {
+	int idle = 0;
+	int total = 0;
+	float idle_percentage = 0;
+	int total_idle = 0;
+	char * ptr_char;
+	int idx_start = 0;
+	int i = 0;
+	int ret;
+	char* token;
+	printk(KERN_INFO "buf:%s", text);
+	while( (token = strsep(&text, d)) != NULL &&i<10){
+		printk(KERN_INFO "%s %d \n",token,i);
+		if(i!=0&&i!=1){
+			ret=kstrtol(token,10,&split);
+			if(ret!=0)
+				printk(KERN_ALERT "Conversion error!!.\n");
+			total=total+split;
+		}
+		if(i==5||i==6){
+			ret = kstrtol(token, 10, &idle);
+			if(ret!=0) {
+				printk(KERN_ALERT "Conversion error!!.\n");
+			}
+		}
+		i+=1;
+	}
+	idle_percentage = idle*1.0/total;
+	return idle_percentage;
+}
+
 //https://stackoverflow.com/questions/1184274/read-write-files-within-a-linux-kernel-module
 static int do_analysis_proc_stat(void) {
 	struct file *f;
+	float idle = 0;
 	char buffer[BUFFER_SIZE] = {'\0'};
 	mm_segment_t fs;
-	printk("read_proc_stat");
 	f = filp_open("/proc/stat", O_RDONLY, 0);
 	if(!f){
 		printk(KERN_ALERT "filp_open error!!.\n");
@@ -62,8 +95,8 @@ static int do_analysis_proc_stat(void) {
 		set_fs(get_ds());
 		f->f_op->read(f, buffer, BUFFER_SIZE, &f->f_pos);
 		set_fs(fs);
-		printk(KERN_INFO "buf:%s", buffer);
 		filp_close(f, NULL);
+		idle = get_idle_percentage(buffer);
 		return 0;
 	}
 }
