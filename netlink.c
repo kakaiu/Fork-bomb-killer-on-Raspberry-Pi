@@ -95,11 +95,15 @@ static int get_proc_stat(char* buffer, int size) {
 		return -1;
 	} else {
 		// Get current segment descriptor
+		printk("1");
 		fs = get_fs();
+		printk("2");
 		// Set segment descriptor associated to kernel space
 		set_fs(get_ds());
+		printk("3");
 		// Read the file
 		f->f_op->read(f, buffer, size, &f->f_pos);
+		printk("4");
 		// Restore segment descriptor
 		set_fs(fs);
 		// See what we read from file
