@@ -14,6 +14,7 @@
 #include <net/net_namespace.h>
 #include <linux/string.h>
 #include <linux/slab.h>
+#include <linux/list.h>
 
 #define NETLINK_TEST 17 
 #define BUFFER_SIZE 256
@@ -145,16 +146,17 @@ static int do_analysis_proc_stat(int threshold) {
 
 //return potential fork bomb
 static char * find_potential_fork_bomb() {
-	struct task_struct *task;
-	task = &init_task;
-	for (task = &init_task ; (task = next_task(task)) != &init_task ; ) {
-		if (task->state == 0) {
-			printk ("PID: %d, name: %s\n backtrace:\n", task->pid, task->comm);
-			show_stack(task, NULL) ;
-		}
+	struct task_struct *task, *p;
+	struct list_head *pos;
+	int count=0;
+	printk("Hello,let begin\n");
+	task=&init_task;
+	list_for_each(pos,&task->tasks) {
+		p=list_entry(pos,struct task_struct,tasks);
+		count++;
+		printk("%d---->%s\n",p->pid,p->comm);
 	}
-	printk ("backtrace of current task:\n");
-	show_stack (NULL, NULL);
+	printk("the number of process is:%d\n",count);
 	return NULL; //test
 }
 
