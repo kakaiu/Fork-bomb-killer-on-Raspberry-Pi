@@ -80,7 +80,7 @@ static int do_analysis_proc_stat(void) {
 				i++;
 				continue;
 			} else {
-				printk(KERN_INFO "%s %d \n",token, i);
+				printk(KERN_INFO "%s %d",token, i);
 				ret = kstrtol(token, 10, &split);
 				if(ret!=0) {
 					printk(KERN_ALERT "Conversion error!!.\n");
@@ -96,7 +96,7 @@ static int do_analysis_proc_stat(void) {
 			}
 		}
 		percentage = idle*1.0 / total;
-		//printk("percentage: %f", percentage);
+		printk(KERN_INFO "percentage: %f", percentage);
 		return 0;
 	}
 }
