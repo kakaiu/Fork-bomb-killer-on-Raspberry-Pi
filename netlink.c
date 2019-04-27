@@ -51,7 +51,6 @@ struct netlink_kernel_cfg cfg = {
 static long long get_idle_percentage(char text[BUFFER_SIZE]) {
 	long idle = 0;
 	long total = 0;
-	long total_idle = 0;
 	long split;
     long long percentage=0;
 	int i = 0;
