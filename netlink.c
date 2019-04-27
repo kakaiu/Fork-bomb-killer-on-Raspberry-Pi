@@ -19,7 +19,7 @@
 #define BUFFER_SIZE 256
 #define UTIL_THRESHOLD 1250 // 80/100
 #define UTIL_PRECISION 1000
-#define FORCE_RUN_CONFIG_PATH "~/home/pi/final_project/force_run.txt"
+#define FORCE_RUN_CONFIG_PATH "/home/pi/final_project/force_run.config"
 
 static unsigned long period_sec = 1;
 static unsigned long period_nsec = 0;
