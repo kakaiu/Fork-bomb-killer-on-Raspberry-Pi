@@ -14,7 +14,8 @@
 #include <net/net_namespace.h>
 #include <linux/string.h>
 #include <linux/slab.h>
-#include <linux/vfs.h>
+#include <linux/file.h>
+#include <linux/fcntl.h>
 
 #define NETLINK_TEST 17 
 #define BUFFER_SIZE 256
