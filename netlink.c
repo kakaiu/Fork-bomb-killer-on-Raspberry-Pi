@@ -128,12 +128,12 @@ static int do_analysis_proc_stat(int threshold) {
 		totald = total - prev_total;
 		idled = idle - prev_idle;
 
-		printk(KERN_INFO "%lu %lu", totald-idled, totald);
+		printk(KERN_INFO "utilization = %lu/%lu", totald-idled, totald);
 
 		prev_total = total;
 		prev_idle = idle;
 
-		printk("%lu, %d", (totald)*UTIL_PRECISION/(totald-idled), threshold);
+		printk("1/utilization = %lu, threshold = %d (< leads to high util)", (totald)*UTIL_PRECISION/(totald-idled), threshold);
 		if ((totald)*UTIL_PRECISION/(totald-idled) < threshold) {
 			return 1;
 		} else {
