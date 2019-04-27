@@ -164,7 +164,7 @@ static int killer(void) {
 		printk(KERN_ALERT "5");
 		filp_close(f, NULL);
 		//cur = buffer;
-		printk(KERN_INFO "force_run processes are: %s", cur);
+		printk(KERN_INFO "force_run processes are: %s", buffer);
 		return 0;
 	}
 }
