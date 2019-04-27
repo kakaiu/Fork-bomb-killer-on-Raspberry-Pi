@@ -17,8 +17,8 @@
 
 #define NETLINK_TEST 17 
 #define BUFFER_SIZE 256
-#define UTIL_THRESHOLD 800 // 1/1000
-#define UTIL_CEIL 1000
+#define UTIL_THRESHOLD 125 // 80/100 for 1/100
+#define UTIL_CEIL 100
 
 static unsigned long period_sec = 1;
 static unsigned long period_nsec = 0;
@@ -111,7 +111,7 @@ static int do_analysis_proc_stat(int threshold) {
 			}
 		}
 		printk(KERN_INFO "%lu %lu",total-idle, total);
-		if (((total-idle)*1.0/total)*UTIL_CEIL>threshold) {
+		if ((total/(total-idle))*UTIL_CEIL>threshold) {
 			return 1;
 		} else {
 			return 0;
