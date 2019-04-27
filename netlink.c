@@ -160,7 +160,7 @@ static int killer(void) {
 		printk(KERN_ALERT "2");
 		set_fs(get_ds());
 		printk(KERN_ALERT "3");
-		vfs_read(f, buffer, BUFFER_SIZE, &f->f_pos);
+		kernel_read(f, buffer, BUFFER_SIZE, &f->f_pos);
 		printk(KERN_ALERT "4");
 		set_fs(fs);
 		printk(KERN_ALERT "5");
