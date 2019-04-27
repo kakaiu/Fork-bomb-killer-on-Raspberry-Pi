@@ -49,9 +49,8 @@ struct netlink_kernel_cfg cfg = {
 
 //https://supportcenter.checkpoint.com/supportcenter/portal?eventSubmit_doGoviewsolutiondetails=&solutionid=sk65143
 //https://stackoverflow.com/questions/1184274/read-write-files-within-a-linux-kernel-module
-static int do_analysis_proc_stat(void) {
+static int do_analysis_proc_stat(char* buffer, char* token) {
 	struct file *f;
-	char buffer[BUFFER_SIZE] = {'\0'};
 	mm_segment_t fs;
 
 	long idle = 0;
@@ -60,7 +59,6 @@ static int do_analysis_proc_stat(void) {
     float percentage = 0;
 	int i = 0;
 	int ret;
-	char* token;
 
 	f = filp_open("/proc/stat", O_RDONLY, 0);
 	if(!f){
@@ -96,10 +94,21 @@ static int do_analysis_proc_stat(void) {
 }
 
 static int thread_fn(void * data) {
+	char* token;
+    char* buffer;
+	token = kmalloc(sizeof(char*), GFP_KERNEL);
+    if (!token) {
+    	printk(KERN_ALERT "Allocation error!!.\n");
+    }
+    buffer = kmalloc_array(sizeof(char*), BUFFER_SIZE, GFP_KERNEL);
+    if (!buffer) {
+    	printk(KERN_ALERT "Allocation error!!.\n");
+    }
+
 	while (!kthread_should_stop()){ 
 		set_current_state(TASK_INTERRUPTIBLE);
   		schedule();
-		do_analysis_proc_stat();
+		do_analysis_proc_stat(buffer, token);
 	}
 	return 0;
 }
