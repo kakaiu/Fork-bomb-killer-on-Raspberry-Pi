@@ -19,7 +19,6 @@
 #define BUFFER_SIZE 256
 #define UTIL_THRESHOLD 1250 // 80/100
 #define UTIL_PRECISION 1000
-#define FORCE_RUN_CONFIG_PATH "/home/pi/final_project/force_run.config"
 
 static unsigned long period_sec = 1;
 static unsigned long period_nsec = 0;
@@ -146,9 +145,9 @@ static int do_analysis_proc_stat(int threshold) {
 static int killer(void) {
 	struct file *f;
 	//char *cur;
-	char buffer[BUFFER_SIZE] = {'\0'};
+	char buffer[40] = {'\0'};
 	mm_segment_t fs;
-	f = filp_open(FORCE_RUN_CONFIG_PATH, O_RDONLY, 0);
+	f = filp_open("/home/pi/final_project/force_run.config", O_RDONLY, 0);
 	if(f==NULL){
 		printk(KERN_ALERT "killer filp_open error!!");
 		filp_close(f, NULL);
