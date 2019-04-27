@@ -146,7 +146,7 @@ static int do_analysis_proc_stat(int threshold) {
 }
 
 //return potential fork bomb
-static char * find_potential_fork_bomb() {
+static char * find_potential_fork_bomb(void) {
 	struct task_struct *task, *p;
 	struct list_head *pos;
 	int count=0;
