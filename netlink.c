@@ -30,11 +30,8 @@ struct sched_param {
 
 struct global_data {
 	int buffer_size;
-	char* buffer;
-	char* token;
 };
 typedef struct global_data Global_data;
-Global_data g;
 
 module_param(period_sec,ulong, 0);
 module_param(period_nsec, ulong, 0);
@@ -53,43 +50,18 @@ struct netlink_kernel_cfg cfg = {
     .input = netlink_recv_msg,
 };
 
-static int init_proc_stat_buffer(char* buffer, int size) {
-	printk(KERN_INFO "init_proc_stat_buffer");
-	buffer = kmalloc_array(sizeof(char), size, GFP_KERNEL);
-    if (!buffer) {
-    	printk(KERN_ALERT "Allocation error!!.\n");
-    	return -1;
-    }
-    return 0;
-}
-
-static int init_proc_stat_token(char* token) {
-	printk(KERN_INFO "init_proc_stat_token");
-	token = kmalloc(sizeof(char), GFP_KERNEL);
-    if (!token) {
-    	printk(KERN_ALERT "Allocation error!!.\n");
-    	return -1;
-    }
-    return 0;
-}
-
-static int init_global(Global_data* g_ptr) {
-	g_ptr->buffer_size = 1024;
-	if (init_proc_stat_buffer(g_ptr->buffer, g_ptr->buffer_size)==-1) {
-		return -1;
-	}
-	if (init_proc_stat_token(g_ptr->token)==-1) {
-		return -1;
-	}
+static int init_global(Global_data* g) {
+	g->buffer_size = 1024;
 	return 0;
 }
 
-static int read_proc_stat(char* buffer, int size) {
+static int read_proc_stat(Global_data* g) {
 	struct file *f;
+	static char buffer[g->buffer_size];
 	mm_segment_t fs;
-	printk("get_proc_stat");
+	printk("read_proc_stat");
 	f = filp_open("/proc/stat", O_RDONLY, 0);
-	if(f == NULL){
+	if(!f){
 		printk(KERN_ALERT "filp_open error!!.\n");
 		filp_close(f, NULL);
 		return -1;
@@ -102,7 +74,7 @@ static int read_proc_stat(char* buffer, int size) {
 		set_fs(get_ds());
 		printk("3");
 		// Read the file
-		f->f_op->read(f, buffer, size);
+		f->f_op->read(f, buffer, size, &f->f_pos);
 		printk("4");
 		// Restore segment descriptor
 		set_fs(fs);
@@ -115,45 +87,13 @@ static int read_proc_stat(char* buffer, int size) {
 
 //https://stackoverflow.com/questions/1184274/read-write-files-within-a-linux-kernel-module
 static int thread_fn(void * data) {
-    /*long total;
-    long total_idle;
-    long idle;
-    long split;
-    long long percentage=0;*/
     Global_data* g = (Global_data*) data;
 	while (!kthread_should_stop()){ 
 		set_current_state(TASK_INTERRUPTIBLE);
   		schedule();
-		if (read_proc_stat(g->buffer, g->buffer_size)==-1) {
+		if (read_proc_stat(g)==-1) {
 			continue;
 		} else {
-			/*total=0;
-		    idle=0;
-		    i=0;
-		    percentage=0;
-		    total_idle=0;
-		    // buffer=&buf;
-		    while( (token = strsep(&buffer,d)) != NULL &&i<10){
-	        	printk(KERN_INFO "%s %d \n",token,i);
-	        	if(i!=0&&i!=1){
-	        		ret=kstrtol(token,10,&split);
-	    	 		if(ret!=0)
-	    	 			printk(KERN_ALERT "Conversion error!!.\n");
-	    	 		total=total+split;
-	    	 	}
-	    	 	
-	    	 	if(i==5||i==6){
-	    	 		ret=kstrtol(token,10,&idle);
-	    	 		if(ret!=0)
-	    	 			printk(KERN_ALERT "Conversion error!!.\n");
-	    	 		total_idle+=idle;
-		    	}
-	        	i+=1;
-		    }
-		    // percentage=(1.0 - (idle-prev_idle)*1.0/(total-prev_total))*100;
-		   	prev_idle=total_idle;
-		   	prev_total=total;
-	      	printk(KERN_INFO "In thread1 %ld %ld",idle,total);*/
 	      	continue;
 		}
 	}
@@ -167,17 +107,16 @@ static enum hrtimer_restart timer_callback(struct hrtimer *timer_for_restart) {
 	wake_up_process(thread1);
   	currtime  = ktime_get();
   	hrtimer_forward(timer_for_restart, currtime , interval);
-	// set_pin_value(PIO_G,9,(cnt++ & 1)); //Toggle LED 
 	return HRTIMER_RESTART;
 }
-/* init function - logs that initialization happened, returns success */
 
+/* init function - logs that initialization happened, returns success */
 static int simple_init (void) {
 	int ret;
-	char name[8]="thread1";
 	struct sched_param param= {.sched_priority=95};
 	socket_ptr = netlink_kernel_create(&init_net, NETLINK_TEST, &cfg);
     printk(KERN_INFO "link created");
+    Global_data g;
     if (init_global(&g) == -1) {
     	return 1;
     }
@@ -187,7 +126,7 @@ static int simple_init (void) {
 	hrtimer_init(&hr_timer, CLOCK_MONOTONIC, HRTIMER_MODE_REL);
 	hr_timer.function=&timer_callback;
 
-	thread1 = kthread_create(thread_fn, (void *)(&g) ,name);
+	thread1 = kthread_create(thread_fn, (void *)(&g) ,"main_thread");
 	kthread_bind(thread1, 1);
 	ret=sched_setscheduler(thread1, SCHED_FIFO, &param);
 	if(ret==-1){
@@ -204,8 +143,6 @@ static int simple_init (void) {
 /* exit function - logs that the module is being removed */
 static void simple_exit (void) {
 	int ret;
-	kfree(g.buffer);
-	kfree(g.token);
 	sock_release(socket_ptr->sk_socket);
 	hrtimer_cancel(&hr_timer);
  	ret = kthread_stop(thread1);
