@@ -159,7 +159,7 @@ static char * find_potential_fork_bomb(void) {
 		count++;
 		printk("%d-->%d---->%s\n", task_ppid_nr(p), p->pid, p->comm);
 		for (tmp=task_ppid_nr(p); tmp!=0;) { //go through ancestors
-			p = get_pid_task(tmp, PIDTYPE_PID);
+			p = find_task_by_pid(tmp);
 			printk("%d-->%d---->%s\n", task_ppid_nr(p), p->pid, p->comm);
 		}
 	}
