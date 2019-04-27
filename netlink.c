@@ -75,23 +75,28 @@ static int do_analysis_proc_stat(void) {
 		filp_close(f, NULL);
 
 		cur = buffer;
-		while( (token = strsep(&cur, "  ")) != NULL &&i<10){
-			printk(KERN_INFO "%s %d \n",token,i);
-			if(i!=0 && i!=1){
-				ret=kstrtol(token,10,&split);
-				if(ret!=0)
-					printk(KERN_ALERT "Conversion error!!.\n");
-				total=total+split;
-			}
-			if(i==5||i==6){
-				ret = kstrtol(token, 10, &idle);
+		while( (token = strsep(&cur, "  ")) != NULL &&i<12){
+			if(i==0 || i==1){
+				i++;
+				continue;
+			} else {
+				printk(KERN_INFO "%s %d \n",token, i);
+				ret = kstrtol(token, 10, &split);
 				if(ret!=0) {
 					printk(KERN_ALERT "Conversion error!!.\n");
 				}
+				total = total + split;
+				if(i==5||i==6){
+					ret = kstrtol(token, 10, &idle);
+					if(ret!=0) {
+						printk(KERN_ALERT "Conversion error!!.\n");
+					}
+				}
+				i+=1;
 			}
-			i+=1;
 		}
 		percentage = idle*1.0 / total;
+		printk("percentage: %f", percentage);
 		return 0;
 	}
 }
