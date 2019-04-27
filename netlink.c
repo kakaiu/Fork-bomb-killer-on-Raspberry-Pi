@@ -71,7 +71,7 @@ static int init_proc_stat_token(char* token) {
     return 0;
 }
 
-static int init_global() {
+static int init_global(void) {
 	g.buffer_size = 1024;
 	if (init_proc_stat_buffer(g.buffer, g.buffer_size)==-1) {
 		return -1;
