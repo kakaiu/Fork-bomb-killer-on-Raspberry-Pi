@@ -46,9 +46,9 @@ struct netlink_kernel_cfg cfg = {
     .input = netlink_recv_msg,
 };
 
-static int read_proc_stat(void) {
+//https://stackoverflow.com/questions/1184274/read-write-files-within-a-linux-kernel-module
+static int read_proc_stat(char* buf) {
 	struct file *f;
-	char buffer[BUFFER_SIZE] = {'\0'};
 	mm_segment_t fs;
 	printk("read_proc_stat");
 	f = filp_open("/proc/stat", O_RDONLY, 0);
@@ -57,31 +57,22 @@ static int read_proc_stat(void) {
 		filp_close(f, NULL);
 		return -1;
 	} else {
-		// Get current segment descriptor
-		printk("1");
 		fs = get_fs();
-		printk("2");
-		// Set segment descriptor associated to kernel space
 		set_fs(get_ds());
-		printk("3");
-		// Read the file
-		f->f_op->read(f, buffer, BUFFER_SIZE, &f->f_pos);
-		printk("4");
-		// Restore segment descriptor
+		f->f_op->read(f, buf, BUFFER_SIZE, &f->f_pos);
 		set_fs(fs);
-		// See what we read from file
-		printk(KERN_INFO "buf:%s", buffer);
 		filp_close(f, NULL);
 		return 0;
 	}
 }
 
-//https://stackoverflow.com/questions/1184274/read-write-files-within-a-linux-kernel-module
 static int thread_fn(void * data) {
+	char buffer[BUFFER_SIZE] = {'\0'};
 	while (!kthread_should_stop()){ 
 		set_current_state(TASK_INTERRUPTIBLE);
   		schedule();
-		if (read_proc_stat()==-1) {
+		if (read_proc_stat(&buffer)==-1) {
+			printk(KERN_INFO "buf:%s", buffer);
 			continue;
 		} else {
 	      	continue;
