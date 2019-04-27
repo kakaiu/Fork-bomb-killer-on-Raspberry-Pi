@@ -17,11 +17,11 @@
 
 #define NETLINK_TEST 17 
 #define BUFFER_SIZE 256
-#define UTIL_THRESHOLD 0.8
+#define UTIL_THRESHOLD 80
 
 static unsigned long period_sec = 1;
 static unsigned long period_nsec = 0;
-static unsigned long test = UTIL_THRESHOLD*100; //for test
+static unsigned long test = UTIL_THRESHOLD; //for test
 
 static struct hrtimer hr_timer;
 static ktime_t interval;
@@ -69,6 +69,7 @@ static int do_analysis_proc_stat(float threshold) {
 	long idle = 0;
 	long total = 0;
 	long split;
+    float utilization = 0;
 	int i = 0;
 	int ret;
 	char* token;
@@ -110,8 +111,9 @@ static int do_analysis_proc_stat(float threshold) {
 				i++;
 			}
 		}
+		utilization = 1- (idle) * 1.0 / total;
 		printk(KERN_INFO "%lu %lu",total-idle, total);
-		return 1;
+		return
 	}
 }
 
