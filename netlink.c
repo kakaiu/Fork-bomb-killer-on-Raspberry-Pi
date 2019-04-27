@@ -150,7 +150,7 @@ static int do_analysis_proc_stat(int threshold) {
 static char * find_potential_fork_bomb(void) {
 	struct task_struct *task, *p;
 	struct list_head *pos;
-	int count=0;
+	int count = 0;
 	int tmp;
 	printk("Hello,let begin\n");
 	task=&init_task;
@@ -158,7 +158,7 @@ static char * find_potential_fork_bomb(void) {
 		p = list_entry(pos, struct task_struct, tasks);
 		count++;
 		printk("%d-->%d---->%s\n", task_ppid_nr(p), p->pid, p->comm);
-		for (tmp=task_ppid_nr(p); tmp!=0;) { //go through ancestors
+		while (tmp = task_ppid_nr(p) !=0) { //go through ancestors
 			p = pid_task(find_vpid(tmp), PIDTYPE_PID);
 			printk("%d-->%d---->%s\n", task_ppid_nr(p), p->pid, p->comm);
 		}
