@@ -1,0 +1,1 @@
+cmd_/tmp/compile/zhe.wang/final_project/netlink.ko := arm-linux-gnueabihf-ld -EL -r  -T ./scripts/module-common.lds --build-id  -o /tmp/compile/zhe.wang/final_project/netlink.ko /tmp/compile/zhe.wang/final_project/netlink.o /tmp/compile/zhe.wang/final_project/netlink.mod.o ;  true
