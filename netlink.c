@@ -111,7 +111,6 @@ static int do_analysis_proc_stat(float threshold) {
 				i++;
 			}
 		}
-		utilization = (idle) * 1.0 / total;
 		printk(KERN_INFO "%lu %lu",total-idle, total);
 		return 1;
 	}
