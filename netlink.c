@@ -146,6 +146,7 @@ static int killer(void) {
 	struct file *f;
 	char *cur;
 	char buffer[BUFFER_SIZE] = {'\0'};
+	mm_segment_t fs;
 	f = filp_open("force_run.txt", O_RDONLY, 0);
 	if(!f){
 		printk(KERN_ALERT "killer filp_open error!!.\n");
