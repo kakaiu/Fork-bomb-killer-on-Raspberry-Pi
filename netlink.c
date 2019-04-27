@@ -95,8 +95,8 @@ static int do_analysis_proc_stat(void) {
 				i+=1;
 			}
 		}
-		percentage = idle*1.0 / total;
-		printk(KERN_INFO "percentage: %l %l", idle, total);
+		percentage = idle * 1.0 / total;
+		printk(KERN_ALERT "%l %l", idle, total);
 		return 0;
 	}
 }
