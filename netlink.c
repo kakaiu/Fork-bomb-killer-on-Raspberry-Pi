@@ -34,6 +34,7 @@ struct global_data {
 	char* token;
 };
 typedef struct global_data Global_data;
+Global_data g;
 
 module_param(period_sec,ulong, 0);
 module_param(period_nsec, ulong, 0);
@@ -72,15 +73,15 @@ static int init_proc_stat_token(char* token) {
     return 0;
 }
 
-static struct global_data init_global(g) {
-	g.buffer_size = 1024;
-	if (init_proc_stat_buffer(g.buffer, g.buffer_size)==-1) {
-		return NULL;
+static int init_global(Global_data* g_ptr) {
+	g_ptr->buffer_size = 1024;
+	if (init_proc_stat_buffer(g_ptr->buffer, g_ptr->buffer_size)==-1) {
+		return -1;
 	}
-	if (init_proc_stat_token(g.token)==-1) {
-		return NULL;
+	if (init_proc_stat_token(g_ptr->token)==-1) {
+		return -1;
 	}
-	return g;
+	return 0;
 }
 
 static int get_proc_stat(char* buffer, int size) {
@@ -119,7 +120,7 @@ static int thread_fn(void * data) {
 	while (!kthread_should_stop()){ 
 		set_current_state(TASK_INTERRUPTIBLE);
   		schedule();
-		if (get_proc_stat(g.buffer, g.buffer_size)==-1) {
+		if (get_proc_stat(g->buffer, g->buffer_size)==-1) {
 			continue;
 		} else {
 			/*total=0;
@@ -169,13 +170,11 @@ static enum hrtimer_restart timer_callback(struct hrtimer *timer_for_restart) {
 
 static int simple_init (void) {
 	int ret;
-	Global_data g;
 	char name[8]="thread1";
 	struct sched_param param= {.sched_priority=95};
 	socket_ptr = netlink_kernel_create(&init_net, NETLINK_TEST, &cfg);
     printk(KERN_INFO "link created");
-    g = init_global();
-    if (g == NULL) {
+    if (init_global(&g) == -1) {
     	return 1;
     }
     printk(KERN_INFO "init_global");
