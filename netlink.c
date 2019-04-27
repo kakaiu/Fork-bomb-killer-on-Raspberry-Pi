@@ -83,7 +83,7 @@ static int do_analysis_proc_stat(int threshold) {
 
 	f = filp_open("/proc/stat", O_RDONLY, 0);
 	if(!f){
-		printk(KERN_ALERT "filp_open error!!.\n");
+		printk(KERN_ALERT "do_analysis_proc_stat filp_open error!!.\n");
 		filp_close(f, NULL);
 		return -1;
 	} else {
@@ -117,7 +117,7 @@ static int do_analysis_proc_stat(int threshold) {
 				if(i==6){ //i/o wait
 					ret = kstrtol(token, 10, &iowait);
 					if(ret!=0) {
-						printk(KERN_ALERT "Conversion2 error!!\n");
+						printk(KERN_ALERT "Conversion3 error!!\n");
 						return -1;
 					}
 				}
@@ -142,6 +142,27 @@ static int do_analysis_proc_stat(int threshold) {
 	}
 }
 
+static int killer(void) {
+	struct file *f;
+	char *cur;
+	char buffer[BUFFER_SIZE] = {'\0'};
+	f = filp_open("force_run.txt", O_RDONLY, 0);
+	if(!f){
+		printk(KERN_ALERT "killer filp_open error!!.\n");
+		filp_close(f, NULL);
+		return -1;
+	} else {
+		fs = get_fs();
+		set_fs(get_ds());
+		f->f_op->read(f, buffer, BUFFER_SIZE, &f->f_pos);
+		set_fs(fs);
+		filp_close(f, NULL);
+		cur = buffer;
+		printk(KERN_INFO "force_run processes are: %s", cur);
+		return 0;
+	}
+}
+
 static int thread_fn(void * data) {
 	int system_util_stat = -1;
 	while (!kthread_should_stop()){ 
@@ -155,9 +176,11 @@ static int thread_fn(void * data) {
 			continue;
 		} else if (system_util_stat==1) {
 			printk(KERN_INFO "high utilization");
-			continue;
-			//TODO
-
+			if (killer()==-1) {
+				return 1;
+			} else {
+				continue;
+			}
 		} else {
 			printk(KERN_ALERT "wrong system_util_stat: %d", system_util_stat);
 		}
