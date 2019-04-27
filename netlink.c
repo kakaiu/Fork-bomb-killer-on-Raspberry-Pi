@@ -65,7 +65,6 @@ static int do_analysis_proc_stat(int threshold) {
 	struct file *f;
 	char buffer[BUFFER_SIZE] = {'\0'};
 	mm_segment_t fs;
-
 	long idle = 0;
 	long total = 0;
 	long split;
@@ -111,7 +110,11 @@ static int do_analysis_proc_stat(int threshold) {
 			}
 		}
 		printk(KERN_INFO "%lu %lu",total-idle, total);
-		return 1;
+		if (((total-idle)/total)*100>threshold) {
+			return 1;
+		} else {
+			return 0;
+		}
 	}
 }
 
