@@ -75,7 +75,7 @@ static int do_analysis_proc_stat(void) {
 		filp_close(f, NULL);
 
 		cur = buffer;
-		while( (token = strsep(&cur, "  ")) != NULL &&i<12){
+		while( (token = strsep(&cur, "  ")) != NULL &&i<11){
 			if(i==0||i==1){
 				i++;
 				continue;
