@@ -31,7 +31,7 @@ struct global_data {
 	int buffer_size;
 	char* buffer;
 	char* token;
-	static struct sock *socket_ptr;
+    struct sock *socket_ptr;
 };
 
 struct global_data g;
