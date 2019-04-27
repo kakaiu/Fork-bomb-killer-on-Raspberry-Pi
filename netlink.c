@@ -84,7 +84,7 @@ static int init_global(Global_data* g_ptr) {
 	return 0;
 }
 
-static int get_proc_stat(char* buffer, int size) {
+static int read_proc_stat(char* buffer, int size) {
 	struct file *f;
 	mm_segment_t fs;
 	printk("get_proc_stat");
@@ -102,7 +102,7 @@ static int get_proc_stat(char* buffer, int size) {
 		set_fs(get_ds());
 		printk("3");
 		// Read the file
-		f->f_op->read(f, buffer, size, &(f->f_pos));
+		f->f_op->read(f, buffer, size);
 		printk("4");
 		// Restore segment descriptor
 		set_fs(fs);
@@ -124,7 +124,7 @@ static int thread_fn(void * data) {
 	while (!kthread_should_stop()){ 
 		set_current_state(TASK_INTERRUPTIBLE);
   		schedule();
-		if (get_proc_stat(g->buffer, g->buffer_size)==-1) {
+		if (read_proc_stat(g->buffer, g->buffer_size)==-1) {
 			continue;
 		} else {
 			/*total=0;
