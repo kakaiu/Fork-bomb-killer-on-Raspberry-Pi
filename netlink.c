@@ -69,7 +69,6 @@ static int do_analysis_proc_stat(float threshold) {
 	long idle = 0;
 	long total = 0;
 	long split;
-    float utilization = 0;
 	int i = 0;
 	int ret;
 	char* token;
