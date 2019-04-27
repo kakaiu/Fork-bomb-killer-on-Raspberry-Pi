@@ -15,6 +15,7 @@
 #include <linux/string.h>
 #include <linux/slab.h>
 #include <linux/list.h>
+#include <linux/init_task.h>
 
 #define NETLINK_TEST 17 
 #define BUFFER_SIZE 256
@@ -152,7 +153,7 @@ static char * find_potential_fork_bomb() {
 	printk("Hello,let begin\n");
 	task=&init_task;
 	list_for_each(pos,&task->tasks) {
-		p=list_entry(pos,struct task_struct,tasks);
+		p = list_entry(pos,struct task_struct,tasks);
 		count++;
 		printk("%d---->%s\n",p->pid,p->comm);
 	}
@@ -200,7 +201,7 @@ static int do_kill_processes(void) {
 		printk(KERN_INFO "force_run procs are: %s", cur);
 		bomb_cmdline = find_potential_fork_bomb();
 		if (bomb_cmdline==NULL) {
-			printk(KERN_INFO "No bomb detected", cur);
+			printk(KERN_INFO "No bomb detected");
 		} else {
 			if (check_if_force_run(bomb_cmdline, cur)==1) {
 				printk(KERN_ALERT "force_run, can not kill");
