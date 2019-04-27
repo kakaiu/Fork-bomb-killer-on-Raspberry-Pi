@@ -148,9 +148,8 @@ is force_run return 1
 else return 0
 */
 static int check_is_force_run(char* input, char * config) {
-	char *cur;
 	char* token;
-	while( (token = strsep(&cur, " ")) != NULL){
+	while( (token = strsep(&config, " ")) != NULL){
 		printk(KERN_INFO "%s", token);
 		if (strcmp(token, input)==0) {
 			return 1;
