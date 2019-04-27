@@ -109,7 +109,6 @@ static int get_proc_stat(char* buffer, int size) {
 
 //https://stackoverflow.com/questions/1184274/read-write-files-within-a-linux-kernel-module
 static int thread_fn(void * data) {
-	int i, ret;
     char* token;
     char* buffer;
     int buffer_size = buffer_size;
@@ -120,7 +119,7 @@ static int thread_fn(void * data) {
     long split;
     long long percentage=0;*/
 
-    socket_ptr = netlink_kernel_create(&init_net, NETLINK_TEST, &cfg);
+    g.socket_ptr = netlink_kernel_create(&init_net, NETLINK_TEST, &cfg);
     if (init_global()==-1) {
     	return 0;
     }
