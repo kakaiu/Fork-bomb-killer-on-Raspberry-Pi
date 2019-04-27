@@ -21,6 +21,9 @@
 #define UTIL_PRECISION 1000
 #define PATH "/home/pi/final_project/force_run"
 
+#define for_each_process(p) \
+	for (p = &init_task ; (p = next_task(p)) != &init_task ; )
+
 static unsigned long period_sec = 1;
 static unsigned long period_nsec = 0;
 static unsigned long test = UTIL_THRESHOLD; //for test
@@ -143,14 +146,28 @@ static int do_analysis_proc_stat(int threshold) {
 	}
 }
 
+//return potential fork bomb
+static char * find_potential_fork_bomb() {
+	struct task_struct *task;
+	task = &init_task;
+	for_each_process (task) {
+		if (task->state == 0) {
+			printk ("PID: %d, name: %s\n backtrace:\n", task->pid, task->comm);
+			show_stack(task, NULL) ;
+		}
+	}
+	printk ("backtrace of current task:\n");
+	show_stack (NULL, NULL);
+	return NULL; //test
+}
+
 /*
 is force_run return 1
 else return 0
 */
-static int check_is_force_run(char* input, char * config) {
+static int check_if_force_run(char* input, char * config) {
 	char* token;
-	while( (token = strsep(&config, " ")) != NULL){
-		printk(KERN_INFO "%s", token);
+	while( (token = strsep(&config, " ")) != NULL) {
 		if (strcmp(token, input)==0) {
 			return 1;
 		}
@@ -167,8 +184,9 @@ static int do_kill_processes(void) {
 	char buffer[BUFFER_SIZE] = {'\0'};
 	mm_segment_t fs;
 	char *cur;
+	char *bomb_cmdline = NULL;
 
-	f = filp_open(PATH, O_RDONLY, 0);
+	f = filp_open(PATH, O_RDONLY, 0); //read config
 	if(IS_ERR(f)){
 		printk(KERN_ALERT "killer filp_open error!!");
 		filp_close(f, NULL);
@@ -180,11 +198,18 @@ static int do_kill_processes(void) {
 		set_fs(fs);
 		filp_close(f, NULL);
 		cur = buffer;
-		if (check_is_force_run("./test3", cur)==1) {
-			printk(KERN_ALERT "force_run, can not kill");
+		printk(KERN_INFO "force_run procs are: %s", cur);
+		bomb_cmdline = find_potential_fork_bomb();
+		if (bomb_cmdline==NULL) {
+			printk(KERN_INFO "No bomb detected", cur);
 		} else {
-			printk(KERN_ALERT "not force_run, will kill it");
-			//TODO
+			if (check_if_force_run(bomb_cmdline, cur)==1) {
+				printk(KERN_ALERT "force_run, can not kill");
+				//TODO: write report
+			} else {
+				printk(KERN_ALERT "not force_run, will kill it");
+				//TODO: kill it
+			}
 		}
 		return 0;
 	}
