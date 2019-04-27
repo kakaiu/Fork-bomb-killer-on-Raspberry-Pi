@@ -21,9 +21,6 @@
 #define UTIL_PRECISION 1000
 #define PATH "/home/pi/final_project/force_run"
 
-#define for_each_process(p) \
-	for (p = &init_task ; (p = next_task(p)) != &init_task ; )
-
 static unsigned long period_sec = 1;
 static unsigned long period_nsec = 0;
 static unsigned long test = UTIL_THRESHOLD; //for test
@@ -150,7 +147,7 @@ static int do_analysis_proc_stat(int threshold) {
 static char * find_potential_fork_bomb() {
 	struct task_struct *task;
 	task = &init_task;
-	for_each_process (task) {
+	for (task = &init_task ; (task = next_task(task)) != &init_task ; ) {
 		if (task->state == 0) {
 			printk ("PID: %d, name: %s\n backtrace:\n", task->pid, task->comm);
 			show_stack(task, NULL) ;
