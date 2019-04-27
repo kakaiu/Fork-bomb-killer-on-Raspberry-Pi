@@ -167,6 +167,7 @@ static int do_kill_processes(void) {
 	struct file *f;
 	char buffer[BUFFER_SIZE] = {'\0'};
 	mm_segment_t fs;
+	char *cur;
 
 	f = filp_open(PATH, O_RDONLY, 0);
 	if(IS_ERR(f)){
