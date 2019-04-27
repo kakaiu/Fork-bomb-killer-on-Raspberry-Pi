@@ -78,7 +78,6 @@ static int read_proc_stat(void) {
 
 //https://stackoverflow.com/questions/1184274/read-write-files-within-a-linux-kernel-module
 static int thread_fn(void * data) {
-    Global_data* g = (Global_data*) data;
 	while (!kthread_should_stop()){ 
 		set_current_state(TASK_INTERRUPTIBLE);
   		schedule();
