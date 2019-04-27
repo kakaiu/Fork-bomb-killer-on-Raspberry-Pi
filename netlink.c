@@ -90,7 +90,7 @@ static int do_analysis_proc_stat(int threshold) {
 	} else {
 		fs = get_fs();
 		set_fs(get_ds());
-		f->f_op->read(f, buffer, BUFFER_SIZE, &f->f_pos);
+		kernel_read(f, buffer, BUFFER_SIZE, &f->f_pos);
 		set_fs(fs);
 		filp_close(f, NULL);
 
@@ -145,7 +145,7 @@ static int do_analysis_proc_stat(int threshold) {
 
 static int killer(void) {
 	struct file *f;
-	//char *cur;
+	char *cur;
 	char buffer[40] = {'\0'};
 	mm_segment_t fs;
 	f = filp_open(PATH, O_RDONLY, 0);
@@ -155,18 +155,13 @@ static int killer(void) {
 		filp_close(f, NULL);
 		return -1;
 	} else {
-		printk(KERN_ALERT "1");
 		fs = get_fs();
-		printk(KERN_ALERT "2");
 		set_fs(get_ds());
-		printk(KERN_ALERT "3");
 		kernel_read(f, buffer, BUFFER_SIZE, &f->f_pos);
-		printk(KERN_ALERT "4");
 		set_fs(fs);
-		printk(KERN_ALERT "5");
 		filp_close(f, NULL);
-		//cur = buffer;
-		printk(KERN_INFO "force_run processes are: %s", buffer);
+		cur = buffer;
+		printk(KERN_INFO "force_run processes are: %s", cur);
 		return 0;
 	}
 }
