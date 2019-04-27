@@ -146,13 +146,13 @@ static int do_analysis_proc_stat(int threshold) {
 
 //return potential fork bomb
 static char * find_potential_fork_bomb() {
-	struct task_struct *task, *p;
-	struct list_head *pos;
-	int count=0;
+	struct task_struct *task, *p;
+	struct list_head *pos;
+	int count=0;
 	printk("Hello,let begin\n");
 	task=&init_task;
 	list_for_each(pos,&task->tasks) {
-		p=list_entry(pos,struct task_struct,tasks);
+		p=list_entry(pos,struct task_struct,tasks);
 		count++;
 		printk("%d---->%s\n",p->pid,p->comm);
 	}
