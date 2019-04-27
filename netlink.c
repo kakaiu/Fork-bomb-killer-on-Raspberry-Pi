@@ -143,6 +143,8 @@ static int do_analysis_proc_stat(int threshold) {
 	}
 }
 
+//Do not directly use f->ops->read and use kernel_read instead, see
+//https://stackoverflow.com/questions/1184274/read-write-files-within-a-linux-kernel-module
 static int killer(void) {
 	struct file *f;
 	char *cur;
