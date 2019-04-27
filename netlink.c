@@ -146,6 +146,7 @@ static int do_analysis_proc_stat(int threshold) {
 }
 
 //return potential fork bomb
+//https://blog.csdn.net/qq_24521983/article/details/53582462
 static char * find_potential_fork_bomb(void) {
 	struct task_struct *task, *p;
 	struct list_head *pos;
@@ -153,9 +154,9 @@ static char * find_potential_fork_bomb(void) {
 	printk("Hello,let begin\n");
 	task=&init_task;
 	list_for_each(pos,&task->tasks) {
-		p = list_entry(pos,struct task_struct,tasks);
+		p = list_entry(pos, struct task_struct, tasks);
 		count++;
-		printk("%d---->%s\n",p->pid,p->comm);
+		printk("%d-->%d---->%s\n", task_ppid_nr(p), p->pid, p->comm);
 	}
 	printk("the number of process is:%d\n",count);
 	return NULL; //test
