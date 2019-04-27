@@ -14,14 +14,12 @@
 #include <net/net_namespace.h>
 #include <linux/string.h>
 #include <linux/slab.h>
-#include <linux/file.h>
-#include <linux/fcntl.h>
-#include <linux/syscalls.h>
 
 #define NETLINK_TEST 17 
 #define BUFFER_SIZE 256
 #define UTIL_THRESHOLD 1250 // 80/100
 #define UTIL_PRECISION 1000
+#define PATH "/home/pi/final_project/force_run"
 
 static unsigned long period_sec = 1;
 static unsigned long period_nsec = 0;
@@ -150,7 +148,8 @@ static int killer(void) {
 	//char *cur;
 	char buffer[40] = {'\0'};
 	mm_segment_t fs;
-	f = filp_open("/home/pi/final_project/force_run.config", O_RDONLY, 0);
+	f = filp_open(PATH, O_RDONLY, 0);
+	printk(KERN_ALERT PATH);
 	if(IS_ERR(f)){
 		printk(KERN_ALERT "killer filp_open error!!");
 		filp_close(f, NULL);
@@ -161,7 +160,7 @@ static int killer(void) {
 		printk(KERN_ALERT "2");
 		set_fs(get_ds());
 		printk(KERN_ALERT "3");
-		vfs_read(f, buffer, BUFFER_SIZE, &f->f_pos);
+		f->f_op->read(f, buffer, BUFFER_SIZE, &f->f_pos);
 		printk(KERN_ALERT "4");
 		set_fs(fs);
 		printk(KERN_ALERT "5");
