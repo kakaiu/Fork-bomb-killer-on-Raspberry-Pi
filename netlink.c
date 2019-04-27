@@ -60,6 +60,7 @@ static int do_analysis_proc_stat(void) {
 	int i = 0;
 	int ret;
 	char* token;
+	char *cur;
 
 	f = filp_open("/proc/stat", O_RDONLY, 0);
 	if(!f){
@@ -73,8 +74,8 @@ static int do_analysis_proc_stat(void) {
 		set_fs(fs);
 		filp_close(f, NULL);
 
-		char *s_tmp = strdup(buffer);
-		while( (token = strsep((char *)s_tmp, "  ")) != NULL &&i<10){
+		cur = buffer;
+		while( (token = strsep(&cur, "  ")) != NULL &&i<10){
 			printk(KERN_INFO "%s %d \n",token,i);
 			if(i!=0 && i!=1){
 				ret=kstrtol(token,10,&split);
