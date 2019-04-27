@@ -20,6 +20,7 @@ static unsigned long period_nsec=0;
 static struct hrtimer hr_timer;
 static ktime_t interval;
 static struct task_struct *thread1;
+static struct sock *socket_ptr = NULL;
 long prev_idle=0;
 long prev_total=0;
 
@@ -31,7 +32,6 @@ struct global_data {
 	int buffer_size;
 	char* buffer;
 	char* token;
-    struct sock *socket_ptr;
 };
 
 struct global_data g;
@@ -79,7 +79,6 @@ static int init_global(void) {
 	if (init_proc_stat_token(g.token)==-1) {
 		return -1;
 	}
-	g.socket_ptr = NULL;
 	return 0;
 }
 
@@ -115,7 +114,7 @@ static int thread_fn(void * data) {
     long split;
     long long percentage=0;*/
 
-    g.socket_ptr = netlink_kernel_create(&init_net, NETLINK_TEST, &cfg);
+    socket_ptr = netlink_kernel_create(&init_net, NETLINK_TEST, &cfg);
     if (init_global()==-1) {
     	return 0;
     }
@@ -161,8 +160,7 @@ static int thread_fn(void * data) {
 
 
 /*timer expiration*/
-static enum hrtimer_restart timer_callback( struct hrtimer *timer_for_restart )
-{
+static enum hrtimer_restart timer_callback(struct hrtimer *timer_for_restart) {
 	ktime_t currtime;
 	wake_up_process(thread1);
   	currtime  = ktime_get();
@@ -199,7 +197,7 @@ static void simple_exit (void) {
 	int ret;
 	kfree(g.buffer);
 	kfree(g.token);
-	sock_release(g.socket_ptr->sk_socket);
+	sock_release(socket_ptr->sk_socket);
 	hrtimer_cancel(&hr_timer);
  	ret = kthread_stop(thread1);
  	if(!ret)
