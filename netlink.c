@@ -76,23 +76,24 @@ static int do_analysis_proc_stat(void) {
 
 		cur = buffer;
 		while( (token = strsep(&cur, "  ")) != NULL &&i<12){
-			if(i==0 || i==1){
+			if(i==0||i==1){
 				i++;
 				continue;
 			} else {
-				printk(KERN_INFO "%s %d",token, i);
+				printk(KERN_INFO "%s %d", token, i);
 				ret = kstrtol(token, 10, &split);
 				if(ret!=0) {
-					printk(KERN_ALERT "Conversion error!!.\n");
+					printk(KERN_ALERT "Conversion1 error!!\n");
 				}
 				total = total + split;
-				if(i==5||i==6){
+
+				if(i==5){ //idle; assuming i/o wait is not idle
 					ret = kstrtol(token, 10, &idle);
 					if(ret!=0) {
-						printk(KERN_ALERT "Conversion error!!.\n");
+						printk(KERN_ALERT "Conversion2 error!!\n");
 					}
 				}
-				i+=1;
+				i++;
 			}
 		}
 		percentage = idle * 1.0 / total;
