@@ -17,8 +17,8 @@
 
 #define NETLINK_TEST 17 
 #define BUFFER_SIZE 256
-#define UTIL_THRESHOLD 800 // 80/100
-#define UTIL_CEIL 1000
+#define UTIL_THRESHOLD 1250 // 80/100
+#define UTIL_PRECISION 1000
 
 static unsigned long period_sec = 1;
 static unsigned long period_nsec = 0;
@@ -133,7 +133,7 @@ static int do_analysis_proc_stat(int threshold) {
 		prev_total = total;
 		prev_idle = idle;
 
-		if (1) {
+		if ((totald)*UTIL_PRECISION/(totald-idled) < UTIL_THRESHOLD) {
 			return 1;
 		} else {
 			return 0;
