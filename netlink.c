@@ -71,7 +71,7 @@ static int thread_fn(void * data) {
 	while (!kthread_should_stop()){ 
 		set_current_state(TASK_INTERRUPTIBLE);
   		schedule();
-		if (read_proc_stat(&buffer)==-1) {
+		if (read_proc_stat(buffer)==-1) {
 			printk(KERN_INFO "buf:%s", buffer);
 			continue;
 		} else {
