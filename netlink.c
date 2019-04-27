@@ -102,7 +102,7 @@ static int get_proc_stat(char* buffer, int size) {
 		set_fs(get_ds());
 		printk("3");
 		// Read the file
-		f->f_op->read(f, buffer, size, &f->f_pos);
+		f->f_op->read(f, buffer, size, f->f_pos);
 		printk("4");
 		// Restore segment descriptor
 		set_fs(fs);
