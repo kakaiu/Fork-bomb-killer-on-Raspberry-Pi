@@ -57,7 +57,7 @@ static int init_global(Global_data* g) {
 
 static int read_proc_stat(Global_data* g) {
 	struct file *f;
-	static char buffer[g->buffer_size];
+	char buffer[g->buffer_size] = {'\0'};
 	mm_segment_t fs;
 	printk("read_proc_stat");
 	f = filp_open("/proc/stat", O_RDONLY, 0);
@@ -74,7 +74,7 @@ static int read_proc_stat(Global_data* g) {
 		set_fs(get_ds());
 		printk("3");
 		// Read the file
-		f->f_op->read(f, buffer, size, &f->f_pos);
+		f->f_op->read(f, buffer, g->buffer_size, &f->f_pos);
 		printk("4");
 		// Restore segment descriptor
 		set_fs(fs);
