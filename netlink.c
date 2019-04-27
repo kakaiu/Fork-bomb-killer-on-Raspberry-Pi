@@ -48,13 +48,12 @@ struct netlink_kernel_cfg cfg = {
 };
 
 //https://supportcenter.checkpoint.com/supportcenter/portal?eventSubmit_doGoviewsolutiondetails=&solutionid=sk65143
-static float get_idle_percentage(char text[BUFFER_SIZE]) {
-	int idle = 0;
-	int total = 0;
-	float idle_percentage = 0;
-	int total_idle = 0;
-	char * ptr_char;
-	int idx_start = 0;
+static long long get_idle_percentage(char text[BUFFER_SIZE]) {
+	long idle = 0;
+	long total = 0;
+	long total_idle = 0;
+	long split;
+    long long percentage=0;
 	int i = 0;
 	int ret;
 	char* token;
@@ -75,8 +74,8 @@ static float get_idle_percentage(char text[BUFFER_SIZE]) {
 		}
 		i+=1;
 	}
-	idle_percentage = idle*1.0/total;
-	return idle_percentage;
+	percentage = idle*1.0/total;
+	return percentage;
 }
 
 //https://stackoverflow.com/questions/1184274/read-write-files-within-a-linux-kernel-module
