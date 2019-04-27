@@ -48,7 +48,13 @@ struct netlink_kernel_cfg cfg = {
 };
 
 //https://supportcenter.checkpoint.com/supportcenter/portal?eventSubmit_doGoviewsolutiondetails=&solutionid=sk65143
-static float get_idle_percentage(char* text) {
+//https://stackoverflow.com/questions/1184274/read-write-files-within-a-linux-kernel-module
+static int do_analysis_proc_stat(void) {
+	struct file *f;
+	float idle = 0;
+	char buffer[BUFFER_SIZE] = {'\0'};
+	mm_segment_t fs;
+
 	long idle = 0;
 	long total = 0;
 	long split;
@@ -56,33 +62,7 @@ static float get_idle_percentage(char* text) {
 	int i = 0;
 	int ret;
 	char* token;
-	printk(KERN_INFO "buf:%s", text);
-	while( (token = strsep(text, d)) != NULL &&i<10){
-		printk(KERN_INFO "%s %d \n",token,i);
-		if(i!=0&&i!=1){
-			ret=kstrtol(token,10,&split);
-			if(ret!=0)
-				printk(KERN_ALERT "Conversion error!!.\n");
-			total=total+split;
-		}
-		if(i==5||i==6){
-			ret = kstrtol(token, 10, &idle);
-			if(ret!=0) {
-				printk(KERN_ALERT "Conversion error!!.\n");
-			}
-		}
-		i+=1;
-	}
-	percentage = idle*1.0/total;
-	return percentage;
-}
 
-//https://stackoverflow.com/questions/1184274/read-write-files-within-a-linux-kernel-module
-static int do_analysis_proc_stat(void) {
-	struct file *f;
-	float idle = 0;
-	char buffer[BUFFER_SIZE] = {'\0'};
-	mm_segment_t fs;
 	f = filp_open("/proc/stat", O_RDONLY, 0);
 	if(!f){
 		printk(KERN_ALERT "filp_open error!!.\n");
@@ -94,7 +74,24 @@ static int do_analysis_proc_stat(void) {
 		f->f_op->read(f, buffer, BUFFER_SIZE, &f->f_pos);
 		set_fs(fs);
 		filp_close(f, NULL);
-		idle = get_idle_percentage(buffer);
+
+		while( (token = strsep(buffer, d)) != NULL &&i<10){
+			printk(KERN_INFO "%s %d \n",token,i);
+			if(i!=0 && i!=1){
+				ret=kstrtol(token,10,&split);
+				if(ret!=0)
+					printk(KERN_ALERT "Conversion error!!.\n");
+				total=total+split;
+			}
+			if(i==5||i==6){
+				ret = kstrtol(token, 10, &idle);
+				if(ret!=0) {
+					printk(KERN_ALERT "Conversion error!!.\n");
+				}
+			}
+			i+=1;
+		}
+		percentage = idle*1.0 / total;
 		return 0;
 	}
 }
