@@ -148,6 +148,8 @@ is force_run return 1
 else return 0
 */
 static int check_is_force_run(char* input, char * config) {
+	char *cur;
+	char* token;
 	while( (token = strsep(&cur, " ")) != NULL){
 		printk(KERN_INFO "%s", token);
 		if (strcmp(token, input)==0) {
@@ -165,9 +167,6 @@ static int do_kill_processes(void) {
 	struct file *f;
 	char buffer[BUFFER_SIZE] = {'\0'};
 	mm_segment_t fs;
-
-	char *cur;
-	char* token;
 
 	f = filp_open(PATH, O_RDONLY, 0);
 	if(IS_ERR(f)){
