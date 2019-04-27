@@ -156,7 +156,7 @@ static char * find_potential_fork_bomb(void) {
 	list_for_each(pos,&task->tasks) {
 		p = list_entry(pos, struct task_struct, tasks);
 		count++;
-		while (p = task_ppid_nr(p) != 0) { //go through ancestors
+		while ((p=task_ppid_nr(p)) != 0) { //go through ancestors
 			printk("%d-->%d---->%s\n", task_ppid_nr(p), p->pid, p->comm);
 		}
 	}
