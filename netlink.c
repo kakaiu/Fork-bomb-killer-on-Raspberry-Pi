@@ -180,7 +180,7 @@ static int do_kill_processes(void) {
 		set_fs(fs);
 		filp_close(f, NULL);
 		cur = buffer;
-		if (check_is_force_run("./test1", cur)==1) {
+		if (check_is_force_run("./test3", cur)==1) {
 			printk(KERN_ALERT "force_run, can not kill");
 		} else {
 			printk(KERN_ALERT "not force_run, will kill it");
