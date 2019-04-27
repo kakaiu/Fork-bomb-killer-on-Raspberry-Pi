@@ -79,14 +79,17 @@ static int init_global() {
 	if (init_proc_stat_token(g.token)==-1) {
 		return -1;
 	}
-	socket_ptr = NULL
+	g.socket_ptr = NULL;
 	return 0;
 }
 
 static int get_proc_stat(char* buffer, int size) {
+	struct file *f;
+	mm_segment_t fs;
 	f = filp_open("/proc/stat", O_RDONLY, 0);
 	if(f == NULL){
 		printk(KERN_ALERT "filp_open error!!.\n");
+		filp_close(f, NULL);
 		return -1;
 	} else {
 		// Get current segment descriptor
@@ -99,25 +102,23 @@ static int get_proc_stat(char* buffer, int size) {
 		set_fs(fs);
 		// See what we read from file
 		printk(KERN_INFO "buf:%s",buffer);
+		filp_close(f, NULL);
 		return 0;
 	}
-	filp_close(f, NULL);
 }
 
 //https://stackoverflow.com/questions/1184274/read-write-files-within-a-linux-kernel-module
 static int thread_fn(void * data) {
 	int i, ret;
-	struct file *f;
     char* token;
     char* buffer;
     int buffer_size = buffer_size;
 
-    long total;
+    /*long total;
     long total_idle;
     long idle;
     long split;
-    long long percentage=0;
-    mm_segment_t fs;
+    long long percentage=0;*/
 
     socket_ptr = netlink_kernel_create(&init_net, NETLINK_TEST, &cfg);
     if (init_global()==-1) {
