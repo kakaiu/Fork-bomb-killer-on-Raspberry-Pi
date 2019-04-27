@@ -47,8 +47,9 @@ struct netlink_kernel_cfg cfg = {
 };
 
 //https://stackoverflow.com/questions/1184274/read-write-files-within-a-linux-kernel-module
-static int read_proc_stat(char* buf) {
+static int do_analysis_proc_stat(void) {
 	struct file *f;
+	char buffer[BUFFER_SIZE] = {'\0'};
 	mm_segment_t fs;
 	printk("read_proc_stat");
 	f = filp_open("/proc/stat", O_RDONLY, 0);
@@ -59,24 +60,19 @@ static int read_proc_stat(char* buf) {
 	} else {
 		fs = get_fs();
 		set_fs(get_ds());
-		f->f_op->read(f, buf, BUFFER_SIZE, &f->f_pos);
+		f->f_op->read(f, buffer, BUFFER_SIZE, &f->f_pos);
 		set_fs(fs);
+		printk(KERN_INFO "buf:%s", buffer);
 		filp_close(f, NULL);
 		return 0;
 	}
 }
 
 static int thread_fn(void * data) {
-	char buffer[BUFFER_SIZE] = {'\0'};
 	while (!kthread_should_stop()){ 
 		set_current_state(TASK_INTERRUPTIBLE);
   		schedule();
-		if (read_proc_stat(buffer)==-1) {
-			printk(KERN_INFO "buf:%s", buffer);
-			continue;
-		} else {
-	      	continue;
-		}
+		do_analysis_proc_stat();
 	}
 	return 0;
 }
