@@ -165,7 +165,6 @@ static int do_kill_processes(void) {
 	struct file *f;
 	char buffer[BUFFER_SIZE] = {'\0'};
 	mm_segment_t fs;
-	char ** cmdlines;
 
 	char *cur;
 	char* token;
