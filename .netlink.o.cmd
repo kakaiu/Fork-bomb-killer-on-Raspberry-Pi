@@ -3,6 +3,7 @@ cmd_/tmp/compile/zhe.wang/final_project/netlink.o := arm-linux-gnueabihf-gcc -Wp
 source_/tmp/compile/zhe.wang/final_project/netlink.o := /tmp/compile/zhe.wang/final_project/netlink.c
 
 deps_/tmp/compile/zhe.wang/final_project/netlink.o := \
+    $(wildcard include/config/path.h) \
   include/linux/compiler_types.h \
     $(wildcard include/config/enable/must/check.h) \
     $(wildcard include/config/enable/warn/deprecated.h) \
