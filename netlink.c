@@ -33,8 +33,7 @@ struct global_data {
 	char* buffer;
 	char* token;
 };
-
-struct global_data g;
+typedef struct global_data Global_data;
 
 module_param(period_sec,ulong, 0);
 module_param(period_nsec, ulong, 0);
@@ -73,18 +72,19 @@ static int init_proc_stat_token(char* token) {
     return 0;
 }
 
-static int init_global(void) {
+static struct global_data init_global(g) {
 	g.buffer_size = 1024;
 	if (init_proc_stat_buffer(g.buffer, g.buffer_size)==-1) {
-		return -1;
+		return NULL;
 	}
 	if (init_proc_stat_token(g.token)==-1) {
-		return -1;
+		return NULL;
 	}
-	return 0;
+	return g;
 }
 
 static int get_proc_stat(char* buffer, int size) {
+	printk("get_proc_stat");
 	struct file *f;
 	mm_segment_t fs;
 	f = filp_open("/proc/stat", O_RDONLY, 0);
@@ -102,7 +102,7 @@ static int get_proc_stat(char* buffer, int size) {
 		// Restore segment descriptor
 		set_fs(fs);
 		// See what we read from file
-		printk(KERN_INFO "buf:%s",buffer);
+		printk(KERN_INFO "buf:%s", buffer);
 		filp_close(f, NULL);
 		return 0;
 	}
@@ -115,14 +115,7 @@ static int thread_fn(void * data) {
     long idle;
     long split;
     long long percentage=0;*/
-    socket_ptr = netlink_kernel_create(&init_net, NETLINK_TEST, &cfg);
-    printk(KERN_INFO "link created");
-
-    if (init_global()==-1) {
-    	return 0;
-    }
-    printk(KERN_INFO "init_global");
-    
+    Global_data* g = (Global_data*) data;
 	while (!kthread_should_stop()){ 
 		set_current_state(TASK_INTERRUPTIBLE);
   		schedule();
@@ -176,17 +169,26 @@ static enum hrtimer_restart timer_callback(struct hrtimer *timer_for_restart) {
 
 static int simple_init (void) {
 	int ret;
+	Global_data g;
 	char name[8]="thread1";
-	struct sched_param param= { . sched_priority=95};
+	struct sched_param param= {.sched_priority=95};
+	socket_ptr = netlink_kernel_create(&init_net, NETLINK_TEST, &cfg);
+    printk(KERN_INFO "link created");
+    g = init_global();
+    if (g == NULL) {
+    	return 1;
+    }
+    printk(KERN_INFO "init_global");
 	
 	interval=ktime_set(period_sec,period_nsec);
 	hrtimer_init(&hr_timer, CLOCK_MONOTONIC, HRTIMER_MODE_REL);
 	hr_timer.function=&timer_callback;
-	thread1=kthread_create(thread_fn,NULL,name);
+
+	thread1 = kthread_create(thread_fn, (void *)(&g) ,name);
 	kthread_bind(thread1, 1);
 	ret=sched_setscheduler(thread1, SCHED_FIFO, &param);
 	if(ret==-1){
-  		printk(KERN_ALERT "sched_setscheduler");
+  		printk(KERN_ALERT "sched_setscheduler failed");
 		return 1;  
 	}
 	wake_up_process(thread1);
