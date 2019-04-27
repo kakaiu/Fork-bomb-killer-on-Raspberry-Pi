@@ -144,13 +144,28 @@ static int do_analysis_proc_stat(int threshold) {
 }
 
 /*
+is force_run return 1
+else return 0
+*/
+static int check_is_force_run(char* input, char * config) {
+	while( (token = strsep(&cur, " ")) != NULL){
+		printk(KERN_INFO "%s", token);
+		if (strcmp(token, input)==0) {
+			return 1;
+		}
+	}
+	return 0;
+}
+
+/*
 Do not directly use f->ops->read and use kernel_read instead, see
 https://stackoverflow.com/questions/1184274/read-write-files-within-a-linux-kernel-module
 */
-static int killer(void) {
+static int do_kill_processes(void) {
 	struct file *f;
 	char buffer[BUFFER_SIZE] = {'\0'};
 	mm_segment_t fs;
+	char ** cmdlines;
 
 	char *cur;
 	char* token;
@@ -167,11 +182,12 @@ static int killer(void) {
 		set_fs(fs);
 		filp_close(f, NULL);
 		cur = buffer;
-		
-		while( (token = strsep(&cur, " ")) != NULL){
-			printk(KERN_INFO "%s", token);
+		if (check_is_force_run("./test1", cur)==1) {
+			printk(KERN_ALERT "force_run, can not kill");
+		} else {
+			printk(KERN_ALERT "not force_run, will kill it");
+			//TODO
 		}
-		printk(KERN_INFO "DONE.");
 		return 0;
 	}
 }
@@ -189,7 +205,7 @@ static int thread_fn(void * data) {
 			continue;
 		} else if (system_util_stat==1) {
 			printk(KERN_INFO "high utilization");
-			if (killer()==-1) {
+			if (do_kill_processes()==-1) {
 				return 1;
 			} else {
 				continue;
