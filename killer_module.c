@@ -55,7 +55,6 @@ char* read_force_run_buffer;
 char* read_proc_info_buffer;
 char* read_cmdline_buffer;
 char* path_buffer;
-char* write_report_buffer;
 
 module_param(period_sec, ulong, 0);
 module_param(period_nsec, ulong, 0);
@@ -301,12 +300,14 @@ static char* get_cmdline_by_pidn(int pid_n) {
 static int do_write_report(int pid_not_kill) {
 	struct file *f;
 	mm_segment_t fs;
+	char* report = NULL;
 	int i = 0;
 
-	for (i=0; i<BUFFER_SIZE; i++) {
-		write_report_buffer[i] = '\0';
+	report = pid_task(find_vpid(pid_not_kill), PIDTYPE_PID)->comm;
+	if (report==NULL) {
+		printk(KERN_ALERT "report error!!");
+		return -1;
 	}
-	write_report_buffer = pid_task(find_vpid(pid_not_kill), PIDTYPE_PID)->comm;
 
 	f = filp_open(REPORT_PATH, O_WRONLY, 0644); //read config
 	if(IS_ERR(f)){
@@ -368,18 +369,18 @@ static int do_kill_processes(void) {
 				printk("cmdline is %s", bomb_cmdline);
 				if (check_if_force_run(bomb_cmdline, cur)==1) {
 					printk(KERN_ALERT "force_run, can not kill");
-					/*if (do_write_report(bomb_pid)==-1) {
+					if (do_write_report(bomb_pid)==-1) {
 						return -1;
-					}*/
+					}
 				} else {
 					printk(KERN_ALERT "not force_run, kill it");
 					bomb_task = pid_task(find_vpid(bomb_pid), PIDTYPE_PID);
-					kill_pid(find_vpid(bomb_pid), SIGTERM, 1);
+					kill_pid(find_vpid(bomb_pid), SIGTERM, 1); //kill matched
 					task = &init_task;
 					list_for_each(pos, &task->tasks) {
 						p = list_entry(pos, struct task_struct, tasks);
 						if (strcmp(p->comm, bomb_task->comm)==0) {
-							kill_pid(find_vpid(p->pid), SIGTERM, 1);
+							kill_pid(find_vpid(p->pid), SIGTERM, 1); //kill all related
 						}
 					}
 				}
@@ -396,7 +397,6 @@ static int thread_fn(void * data) {
 	read_proc_info_buffer = (char*) kmalloc_array(BUFFER_SIZE, sizeof(char), GFP_KERNEL);
 	read_cmdline_buffer = (char*) kmalloc_array(BUFFER_SIZE, sizeof(char), GFP_KERNEL);
 	path_buffer = (char*) kmalloc_array(BUFFER_SIZE, sizeof(char), GFP_KERNEL);
-	write_report_buffer = (char*) kmalloc_array(BUFFER_SIZE, sizeof(char), GFP_KERNEL);
 	while (!kthread_should_stop()){ 
 		set_current_state(TASK_INTERRUPTIBLE);
   		schedule();
@@ -467,7 +467,6 @@ static void simple_exit (void) {
 	kfree(read_proc_info_buffer);
 	kfree(read_cmdline_buffer);
 	kfree(path_buffer);
-	kfree(write_report_buffer);
     printk(KERN_ALERT "simple module is being unloaded");
 }
 
