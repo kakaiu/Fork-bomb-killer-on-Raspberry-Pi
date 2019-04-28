@@ -166,8 +166,9 @@ static char * find_potential_fork_bomb(void) {
 				continue; //Administrator and do nothing
 			} else if (uid>=1000) {
 				//add to statics
+				continue;
 			} else {
-				printk(KERN_ALERT "Unknown User: %d", );
+				printk(KERN_ALERT "Unknown User: %d", uid);
 			}
 		} while ((tmp = task_ppid_nr(p)) !=0);
 	}
