@@ -10,7 +10,7 @@
 #define maxCPU 3
 #define minCPU 0
 
-static int slowBranch(int period, int cpuAffinity){
+static int work(int period, int cpuAffinity){
 	pid_t forkpid;
 	cpu_set_t set;
 	forkpid = fork();
@@ -27,7 +27,7 @@ static int slowBranch(int period, int cpuAffinity){
 		if (sched_setaffinity(getpid(), sizeof(set), &set) == -1){
 			exit(-1);
 		}
-		slowBranch(period, cpuAffinity);
+		work(period, cpuAffinity);
 	} else {
 		exit(-1);
 	}
@@ -41,6 +41,6 @@ int main( int argc, char* argv[] ){
 	period = atoi(argv[1]);
 	cpuAffinity = atoi(argv[2]);
 	
-	slowBranch(period, cpuAffinity);
+	work(period, cpuAffinity);
 	return 0;
 }

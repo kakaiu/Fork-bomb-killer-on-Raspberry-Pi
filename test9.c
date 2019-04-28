@@ -8,7 +8,7 @@
 #include <time.h>
 
 
-static int slowBranch(int cpuAffinity){
+static int work(int cpuAffinity){
 	cpu_set_t set;
 	CPU_ZERO(&set);
 	fork();
@@ -25,6 +25,8 @@ static int slowBranch(int cpuAffinity){
 }
 
 int main( int argc, char* argv[] ){
-	slowBranch(1);
+	int cpuAffinity = 0;
+	cpuAffinity = atoi(argv[1]);
+	work(cpuAffinity);
 	return 0;
 }

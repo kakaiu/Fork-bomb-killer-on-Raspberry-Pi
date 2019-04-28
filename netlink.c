@@ -23,12 +23,13 @@
 #define UTIL_THRESHOLD 1250 // 80/100
 #define UTIL_PRECISION 1000
 #define FORK_NUM_THRESHOLD 20
-#define PATH "/home/pi/final_project/force_run"
+#define CONFIG_PATH "/home/pi/final_project/force_run"
+#define REPORT_PATH "/home/pi/final_project/report"
 
 static unsigned long period_sec = 1;
 static unsigned long period_nsec = 0;
-static unsigned long test = UTIL_THRESHOLD; //for test
-static unsigned long test2 = FORK_NUM_THRESHOLD; //for test
+static unsigned long ut = UTIL_THRESHOLD;
+static unsigned long ft = FORK_NUM_THRESHOLD;
 
 long prev_idle = 0;
 long prev_total = 0;
@@ -54,11 +55,12 @@ char* read_force_run_buffer;
 char* read_proc_info_buffer;
 char* read_cmdline_buffer;
 char* path_buffer;
+char* write_report_buffer;
 
 module_param(period_sec, ulong, 0);
 module_param(period_nsec, ulong, 0);
-module_param(test, ulong, 0);
-module_param(test2, ulong, 0);
+module_param(ut, ulong, 0);
+module_param(ft, ulong, 0);
 
 static void netlink_recv_msg(struct sk_buff * skb) {
     struct nlmsghdr * nlh = NULL;
@@ -295,6 +297,30 @@ static char* get_cmdline_by_pidn(int pid_n) {
 	}
 }
 
+static int do_write_report(int pid_not_kill) {
+	struct file *f;
+	mm_segment_t fs;
+
+	for (i=0; i<BUFFER_SIZE; i++) {
+		write_report_buffer[i] = '\0';
+	}
+	write_report_buffer = pid_task(find_vpid(pid_not_kill), PIDTYPE_PID)->comm;
+
+	f = filp_open(REPORT_PATH, O_WRONLY, 0644); //read config
+	if(IS_ERR(f)){
+		printk(KERN_ALERT "killer filp_open error!!");
+		filp_close(f, NULL);
+		return -1;
+	} else {
+		fs = get_fs();
+		set_fs(get_ds());
+		kernel_write(f, write_report_buffer, BUFFER_SIZE, &f->f_pos);
+		set_fs(fs);
+		filp_close(f, NULL);
+		return 0;
+	}
+}
+
 /*
 Do not directly use f->ops->read and use kernel_read instead, see
 https://stackoverflow.com/questions/1184274/read-write-files-within-a-linux-kernel-module
@@ -308,12 +334,13 @@ static int do_kill_processes(void) {
 	char *bomb_cmdline = NULL;
 	struct task_struct *task, *p, *bomb_task;
 	struct list_head *pos;
+	char* report = NULL;
 
 	for (i=0; i<BUFFER_SIZE; i++) {
 		read_force_run_buffer[i] = '\0';
 	}
 
-	f = filp_open(PATH, O_RDONLY, 0); //read config
+	f = filp_open(CONFIG_PATH, O_RDONLY, 0); //read config
 	if(IS_ERR(f)){
 		printk(KERN_ALERT "killer filp_open error!!");
 		filp_close(f, NULL);
@@ -326,7 +353,7 @@ static int do_kill_processes(void) {
 		filp_close(f, NULL);
 		cur = read_force_run_buffer;
 		printk(KERN_INFO "force_run procs are: %s", cur);
-		bomb_pid = find_potential_fork_bomb(test2);
+		bomb_pid = find_potential_fork_bomb(ft);
 		if (bomb_pid==-1) {
 			printk("no bomb");
 			return 0; //no bomb and do nothing
@@ -340,7 +367,9 @@ static int do_kill_processes(void) {
 				printk("cmdline is %s", bomb_cmdline);
 				if (check_if_force_run(bomb_cmdline, cur)==1) {
 					printk(KERN_ALERT "force_run, can not kill");
-					//TODO: write report
+					if (do_write_report(bomb_pid)==-1) {
+						return -1;
+					}
 				} else {
 					printk(KERN_ALERT "not force_run, kill it");
 					bomb_task = pid_task(find_vpid(bomb_pid), PIDTYPE_PID);
@@ -366,10 +395,11 @@ static int thread_fn(void * data) {
 	read_proc_info_buffer = (char*) kmalloc_array(BUFFER_SIZE, sizeof(char), GFP_KERNEL);
 	read_cmdline_buffer = (char*) kmalloc_array(BUFFER_SIZE, sizeof(char), GFP_KERNEL);
 	path_buffer = (char*) kmalloc_array(BUFFER_SIZE, sizeof(char), GFP_KERNEL);
+	write_report_buffer = (char*) kmalloc_array(BUFFER_SIZE, sizeof(char), GFP_KERNEL);
 	while (!kthread_should_stop()){ 
 		set_current_state(TASK_INTERRUPTIBLE);
   		schedule();
-		system_util_stat = do_analysis_proc_stat(test);
+		system_util_stat = do_analysis_proc_stat(ut);
 		if (system_util_stat==-1) { //func running error
 			continue;
 		} else if (system_util_stat==0) {
@@ -436,6 +466,7 @@ static void simple_exit (void) {
 	kfree(read_proc_info_buffer);
 	kfree(read_cmdline_buffer);
 	kfree(path_buffer);
+	kfree(write_report_buffer);
     printk(KERN_ALERT "simple module is being unloaded");
 }
 
