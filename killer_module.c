@@ -301,7 +301,6 @@ static int do_write_report(int pid_not_kill) {
 	struct file *f;
 	mm_segment_t fs;
 	char* report = NULL;
-	int i = 0;
 
 	report = pid_task(find_vpid(pid_not_kill), PIDTYPE_PID)->comm;
 	if (report==NULL) {
