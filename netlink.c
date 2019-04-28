@@ -151,28 +151,31 @@ static char * find_potential_fork_bomb(void) {
 	struct task_struct *task, *p;
 	struct list_head *pos;
 	int count = 0;
-	int uid = -1;
 	int tmp;
-	int pid_n;
-	task = &init_task;
-	list_for_each(pos, &task->tasks) {
+	int uid_n = -1;
+	int pid_n = -1;
+	task=&init_task;
+	list_for_each(pos,&task->tasks) {
 		p = list_entry(pos, struct task_struct, tasks);
-		tmp = task_ppid_nr(p);
 		count++;
-		do { //go through ancestors
-			p = pid_task(find_vpid(tmp), PIDTYPE_PID);
-			uid = __kuid_val(task_uid(p));
-			pid_n = p->pid;
-			printk("%d-->%d---->%s (%d)\n", task_ppid_nr(p), pid_n, p->comm,  uid);
-			if (uid==0) {
-				continue; //Administrator and do nothing
-			} else if (uid>=1000) {
-				//add to statics
-				continue;
+		while (1) { //go through ancestors
+			tmp = task_ppid_nr(p);
+			if (tmp==0) {
+				break;
 			} else {
-				printk(KERN_ALERT "Unknown User: %d", uid);
+				p = pid_task(find_vpid(tmp), PIDTYPE_PID);
+				uid_n = __kuid_val(task_uid(p));
+				pid_n = p->pid;
+				printk("%d-->%d---->%s (%d)\n", task_ppid_nr(p), pid_n, p->comm, uid_n);
+				if (uid_n==0) {
+					continue; //Administrator and do nothing
+				} else if (uid_n>=1000) {
+					continue; //todo
+				} else {
+					printk(KERN_ALERT "Unknown User: %d", );
+				}
 			}
-		} while ((tmp = task_ppid_nr(p)) !=0);
+		}
 	}
 	printk("the number of process is:%d\n",count);
 	return NULL; //test
