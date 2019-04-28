@@ -22,7 +22,7 @@
 #define PATH_BUFFER_SIZE 50
 #define UTIL_THRESHOLD 1250 // 80/100
 #define UTIL_PRECISION 1000
-#define FORK_NUM_THRESHOLD 200
+#define FORK_NUM_THRESHOLD 20
 #define PATH "/home/pi/final_project/force_run"
 
 static unsigned long period_sec = 1;
@@ -209,6 +209,8 @@ static int find_potential_fork_bomb(int threshold) {
 					} else if (strcmp(p->comm, "x-terminal-emul")==0) {
 						continue; //system service daemon and do nothing
 					} else if (strcmp(p->comm, "bash")==0) {
+						continue; //system service daemon and do nothing
+					} else if (strcmp(p->comm, "lxpanel")==0) {
 						continue; //system service daemon and do nothing
 					} else {
 						printk("%d-->%d: %s (%d)", task_ppid_nr(p), pid_n, p->comm, uid_n);
