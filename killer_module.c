@@ -371,9 +371,9 @@ static int do_kill_processes(void) {
 				printk("cmdline is %s", bomb_cmdline);
 				if (check_if_force_run(bomb_cmdline, cur)==1) {
 					printk(KERN_ALERT "force_run, can not kill");
-					if (do_write_report(bomb_pid)==-1) {
+					/*if (do_write_report(bomb_pid)==-1) {
 						return -1;
-					}
+					}*/
 				} else {
 					printk(KERN_ALERT "not force_run, kill it");
 					bomb_task = pid_task(find_vpid(bomb_pid), PIDTYPE_PID);
