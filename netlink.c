@@ -49,6 +49,8 @@ struct proc_stat {
 };
 
 struct proc_stat* children_num_array;
+char* buffer_in_do_kill_processes;
+char* buffer_in_do_analysis_proc_stat;
 
 module_param(period_sec, ulong, 0);
 module_param(period_nsec, ulong, 0);
@@ -80,7 +82,6 @@ return three stats:
 //https://stackoverflow.com/questions/1184274/read-write-files-within-a-linux-kernel-module
 static int do_analysis_proc_stat(int threshold) {
 	struct file *f;
-	char buffer[BUFFER_SIZE] = {'\0'};
 	mm_segment_t fs;
 	long idle = 0;
 	long idlecpu = 0;
@@ -94,6 +95,10 @@ static int do_analysis_proc_stat(int threshold) {
 	char* token;
 	char *cur;
 
+	for (i=0; i<BUFFER_SIZE; i++) {
+		buffer_in_do_analysis_proc_stat[i] = '\0';
+	}
+
 	f = filp_open("/proc/stat", O_RDONLY, 0);
 	if(IS_ERR(f)){
 		printk(KERN_ALERT "do_analysis_proc_stat filp_open error!!");
@@ -102,11 +107,11 @@ static int do_analysis_proc_stat(int threshold) {
 	} else {
 		fs = get_fs();
 		set_fs(get_ds());
-		kernel_read(f, buffer, BUFFER_SIZE, &f->f_pos);
+		kernel_read(f, buffer_in_do_analysis_proc_stat, BUFFER_SIZE, &f->f_pos);
 		set_fs(fs);
 		filp_close(f, NULL);
 
-		cur = buffer;
+		cur = buffer_in_do_analysis_proc_stat;
 		while( (token = strsep(&cur, "  ")) != NULL &&i<9){
 			if(i==0||i==1){
 				i++;
@@ -215,7 +220,6 @@ static int find_potential_fork_bomb(int threshold) {
 			}
 		}
 	}
-	/*
 	//test
 	for (i=0; i<BUFFER_SIZE; i++) {
 		if (children_num_array[i].num_children==0) {
@@ -224,7 +228,6 @@ static int find_potential_fork_bomb(int threshold) {
 		printk("%d has %d children", children_num_array[i].pid_n, children_num_array[i].num_children);
 	}
 	printk("the number of process is:%d",count);
-	*/
 	return -1; //test
 }
 
@@ -248,11 +251,15 @@ https://stackoverflow.com/questions/1184274/read-write-files-within-a-linux-kern
 */
 static int do_kill_processes(void) {
 	struct file *f;
-	char buffer[BUFFER_SIZE] = {'\0'};
+	int i = 0;
 	mm_segment_t fs;
 	char *cur;
 	int bomb_pid = -1;
 	char *bomb_cmdline = NULL;
+
+	for (i=0; i<BUFFER_SIZE; i++) {
+		buffer_in_do_kill_processes[i] = '\0';
+	}
 
 	f = filp_open(PATH, O_RDONLY, 0); //read config
 	if(IS_ERR(f)){
@@ -262,10 +269,10 @@ static int do_kill_processes(void) {
 	} else {
 		fs = get_fs();
 		set_fs(get_ds());
-		kernel_read(f, buffer, BUFFER_SIZE, &f->f_pos);
+		kernel_read(f, buffer_in_do_kill_processes, BUFFER_SIZE, &f->f_pos);
 		set_fs(fs);
 		filp_close(f, NULL);
-		cur = buffer;
+		cur = buffer_in_do_kill_processes;
 		printk(KERN_INFO "force_run procs are: %s", cur);
 		bomb_pid = find_potential_fork_bomb(test2);
 		printk("bomb pid is %d", bomb_pid);
@@ -288,6 +295,8 @@ static int do_kill_processes(void) {
 static int thread_fn(void * data) {
 	int system_util_stat = -1;
 	children_num_array = (struct proc_stat*) kmalloc_array(BUFFER_SIZE, sizeof(struct proc_stat), GFP_KERNEL);
+	buffer_in_do_kill_processes = (char*) kmalloc_array(BUFFER_SIZE, sizeof(char), GFP_KERNEL);
+	buffer_in_do_analysis_proc_stat = (char*) kmalloc_array(BUFFER_SIZE, sizeof(char), GFP_KERNEL);
 	while (!kthread_should_stop()){ 
 		set_current_state(TASK_INTERRUPTIBLE);
   		schedule();
@@ -347,12 +356,15 @@ static int simple_init (void) {
 /* exit function - logs that the module is being removed */
 static void simple_exit (void) {
 	int ret;
-	kfree(children_num_array);
 	sock_release(socket_ptr->sk_socket);
 	hrtimer_cancel(&hr_timer);
  	ret = kthread_stop(main_thread);
- 	if(!ret)
+ 	if(!ret) {
   		printk(KERN_INFO "Thread stopped");
+ 	}
+  	kfree(children_num_array);
+	kfree(buffer_in_do_kill_processes);
+	kfree(buffer_in_do_analysis_proc_stat);
     printk(KERN_ALERT "simple module is being unloaded");
 }
 
