@@ -247,7 +247,7 @@ static int check_if_force_run(char* input, char * config) {
 	return 0;
 }
 
-static char* get_cmdline(int pid_n) {
+static char* get_cmdline_by_pidn(int pid_n) {
 	struct file *f;
 	mm_segment_t fs;
 	char* cur = NULL;
@@ -308,7 +308,7 @@ static int do_kill_processes(void) {
 			return 0; //no bomb and do nothing
 		} else {
 			printk("bomb pid is %d", bomb_pid);
-			bomb_cmdline = get_cmdline(bomb_pid);
+			bomb_cmdline = get_cmdline_by_pidn(bomb_pid);
 			if (bomb_cmdline==NULL) {
 				printk(KERN_ALERT "no cmdline");
 				return -1;
