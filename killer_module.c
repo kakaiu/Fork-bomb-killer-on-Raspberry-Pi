@@ -262,7 +262,7 @@ else return 0
 */
 static int check_if_force_run(char* input, char * config) {
 	char* token;
-	while( (token = strsep(config, " ")) != NULL) {
+	while( (token = strsep(&config, "  ")) != NULL) {
 		if (strcmp(token, input)==0) {
 			return 1;
 		}
