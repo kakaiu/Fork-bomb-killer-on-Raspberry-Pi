@@ -115,6 +115,7 @@ static int do_analysis_proc_stat(int threshold) {
 		filp_close(f, NULL);
 
 		cur = read_proc_info_buffer;
+		i = 0;
 		while( (token = strsep(&cur, "  ")) != NULL &&i<9){
 			if(i==0||i==1){
 				i++;
