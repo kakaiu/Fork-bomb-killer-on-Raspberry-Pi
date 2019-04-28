@@ -182,6 +182,7 @@ static int find_potential_fork_bomb(int threshold) {
 	int pid_n = -1;
 	int max_children = 0;
 	int pid_max_children = -1;
+	char* name_max = NULL;
 	
 	for (i=0; i<BUFFER_SIZE; i++) { //refresh
 		children_num_array[i].pid_n = -1;
@@ -210,9 +211,11 @@ static int find_potential_fork_bomb(int threshold) {
 						continue; //system service daemon and do nothing
 					} else if (strcmp(p->comm, "x-terminal-emul")==0) {
 						continue; //system service daemon and do nothing
+					} else if (strcmp(p->comm, "lxpanel")==0) {
+						continue; //system service daemon and do nothing
 					} else if (strcmp(p->comm, "bash")==0) {
 						continue; //system service daemon and do nothing
-					} else if (strcmp(p->comm, "lxpanel")==0) {
+					} else if (strcmp(p->comm, "lxterminal")==0) {
 						continue; //system service daemon and do nothing
 					} else {
 						printk("%d-->%d: %s (%d)", task_ppid_nr(p), pid_n, p->comm, uid_n);
@@ -242,6 +245,7 @@ static int find_potential_fork_bomb(int threshold) {
 		} else if (children_num_array[i].num_children>max_children) {
 			max_children = children_num_array[i].num_children;
 			pid_max_children = children_num_array[i].pid_n;
+			name_max = 
 		}
 	}
 
@@ -304,6 +308,8 @@ static int do_kill_processes(void) {
 	int i = 0;
 	int bomb_pid = -1;
 	char *bomb_cmdline = NULL;
+	struct task_struct *task, *p, *bomb_task;
+	struct list_head *pos;
 
 	for (i=0; i<BUFFER_SIZE; i++) {
 		read_force_run_buffer[i] = '\0';
@@ -339,7 +345,15 @@ static int do_kill_processes(void) {
 					//TODO: write report
 				} else {
 					printk(KERN_ALERT "not force_run, kill it");
+					bomb_task = pid_task(find_vpid(bomb_pid), PIDTYPE_PID);
 					kill_pid(find_vpid(bomb_pid), SIGTERM, 1);
+					task = &init_task;
+					list_for_each(pos, &task->tasks) {
+						p = list_entry(pos, struct task_struct, tasks);
+						if (strcmp(p->comm, bomb_task->comm)==0) {
+							kill_pid(find_vpid(p->pid), SIGTERM, 1);
+						}
+					}
 				}
 			}
 		}
