@@ -316,7 +316,7 @@ static int do_write_report(int pid_not_kill) {
 	} else {
 		fs = get_fs();
 		set_fs(get_ds());
-		kernel_write(f, report, BUFFER_SIZE, &f->f_pos);
+		kernel_write(f, report, sizeof(report), &f->f_pos);
 		set_fs(fs);
 		filp_close(f, NULL);
 		return 0;
