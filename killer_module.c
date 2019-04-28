@@ -262,12 +262,9 @@ else return 0
 */
 static int check_if_force_run(char* input, char* config) {
 	char* token;
-	printk("%s", input);
-	printk("%s", config);
 	while( (token = strsep(&config, "  ")) != NULL) {
 		printk("%s:%s", token, input);
-		if (strcmp("./test2", input)==0) {
-			printk("in: %s", token);
+		if (strcmp(token, input)==0) {
 			return 1;
 		}
 	}
