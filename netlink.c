@@ -169,8 +169,12 @@ static char * find_potential_fork_bomb(void) {
 				if (uid_n==0) {
 					continue; //Administrator and do nothing
 				} else if (uid_n>=1000) {
-					printk("%d-->%d---->%s (%d)\n", task_ppid_nr(p), pid_n, p->comm, uid_n);
-					continue;
+					if (strcmp(p->comm, "systemd")==0) {
+						continue; //system service daemon and do nothing
+					} else {
+						printk("%d-->%d: %s (%d)\n", task_ppid_nr(p), pid_n, p->comm, uid_n);
+						continue;
+					}
 				} else {
 					printk(KERN_ALERT "Unknown User: %d", uid_n);
 				}
