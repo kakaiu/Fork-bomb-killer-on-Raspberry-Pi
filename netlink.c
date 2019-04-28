@@ -167,7 +167,13 @@ static char * find_potential_fork_bomb(void) {
 				uid_n = __kuid_val(task_uid(p));
 				pid_n = p->pid;
 				if (uid_n==0) {
-					continue; //Administrator and do nothing
+					if (strcmp(p->comm, "systemd")==0) {
+						continue; //system service daemon and do nothing
+					} else {
+						printk("%d-->%d: %s (%d)\n", task_ppid_nr(p), pid_n, p->comm, uid_n);
+						continue;
+					}
+					//continue; //Administrator and do nothing
 				} else if (uid_n>=1000) {
 					if (strcmp(p->comm, "systemd")==0) {
 						continue; //system service daemon and do nothing
