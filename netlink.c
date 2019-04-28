@@ -212,7 +212,7 @@ static int find_potential_fork_bomb(int threshold) {
 						continue; //system service daemon and do nothing
 					} else if (strcmp(p->comm, "openbox")==0) {
 						continue; //system service daemon and do nothing
-					} else if (strcmp(p->comm, "x-terminal-emulator")==0) {
+					} else if (strcmp(p->comm, "x-terminal-emul")==0) {
 						continue; //system service daemon and do nothing
 					} else {
 						//printk("%d-->%d: %s (%d)", task_ppid_nr(p), pid_n, p->comm, uid_n);
