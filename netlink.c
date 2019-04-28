@@ -172,7 +172,7 @@ static char * find_potential_fork_bomb(void) {
 				} else if (uid_n>=1000) {
 					continue; //todo
 				} else {
-					printk(KERN_ALERT "Unknown User: %d", );
+					printk(KERN_ALERT "Unknown User: %d", uid_n);
 				}
 			}
 		}
