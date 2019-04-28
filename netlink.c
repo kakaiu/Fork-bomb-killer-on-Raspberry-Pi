@@ -154,8 +154,8 @@ static char * find_potential_fork_bomb(void) {
 	int tmp;
 	int uid_n = -1;
 	int pid_n = -1;
-	task=&init_task;
-	list_for_each(pos,&task->tasks) {
+	task = &init_task;
+	list_for_each(pos, &task->tasks) {
 		p = list_entry(pos, struct task_struct, tasks);
 		count++;
 		while (1) { //go through ancestors
@@ -163,14 +163,14 @@ static char * find_potential_fork_bomb(void) {
 			if (tmp==0) {
 				break;
 			} else {
-				p = pid_task(find_vpid(tmp), PIDTYPE_PID);
+				p = pid_task(find_vpid(tmp), PIDTYPE_PID); //only consider the node from its parent to root
 				uid_n = __kuid_val(task_uid(p));
 				pid_n = p->pid;
-				printk("%d-->%d---->%s (%d)\n", task_ppid_nr(p), pid_n, p->comm, uid_n);
 				if (uid_n==0) {
 					continue; //Administrator and do nothing
 				} else if (uid_n>=1000) {
-					continue; //todo
+					printk("%d-->%d---->%s (%d)\n", task_ppid_nr(p), pid_n, p->comm, uid_n);
+					continue;
 				} else {
 					printk(KERN_ALERT "Unknown User: %d", uid_n);
 				}
