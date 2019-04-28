@@ -157,10 +157,10 @@ static char * find_potential_fork_bomb(void) {
 	list_for_each(pos,&task->tasks) {
 		p = list_entry(pos, struct task_struct, tasks);
 		count++;
-		printk("%d-->%d---->%s (%d)\n", task_ppid_nr(p), p->pid, p->comm, p->loginuid);
+		printk("%d-->%d---->%s (%d)\n", task_ppid_nr(p), p->pid, p->comm,  __kuid_val(task_uid(p)));
 		while ((tmp = task_ppid_nr(p)) !=0) { //go through ancestors
 			p = pid_task(find_vpid(tmp), PIDTYPE_PID);
-			printk("%d-->%d---->%s (%d)\n", task_ppid_nr(p), p->pid, p->comm, p->loginuid);
+			printk("%d-->%d---->%s (%d)\n", task_ppid_nr(p), p->pid, p->comm,  __kuid_val(task_uid(p)));
 		}
 	}
 	printk("the number of process is:%d\n",count);
