@@ -267,6 +267,7 @@ static int check_if_force_run(char* input, char* config) {
 	while( (token = strsep(&config, "  ")) != NULL) {
 		printk("%s", token);
 		if (strcmp(token, input)==0) {
+			printk("in: %s", token);
 			return 1;
 		}
 	}
