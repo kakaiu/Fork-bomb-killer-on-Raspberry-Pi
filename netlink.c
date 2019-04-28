@@ -248,7 +248,7 @@ static int find_potential_fork_bomb(int threshold) {
 	if (pid_max_children>threshold) {
 		return pid_max_children; //return bomb_pid
 	} else {
-		return NULL;
+		return -1;
 	}
 }
 
