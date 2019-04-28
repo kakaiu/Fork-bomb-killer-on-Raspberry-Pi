@@ -245,7 +245,6 @@ static int find_potential_fork_bomb(int threshold) {
 		} else if (children_num_array[i].num_children>max_children) {
 			max_children = children_num_array[i].num_children;
 			pid_max_children = children_num_array[i].pid_n;
-			name_max = 
 		}
 	}
 
