@@ -180,6 +180,8 @@ static int find_potential_fork_bomb(int threshold) {
 	int i;
 	int uid_n = -1;
 	int pid_n = -1;
+	int max_children = 0;
+	int pid_max_children = -1;
 	
 	for (i=0; i<BUFFER_SIZE; i++) { //refresh
 		children_num_array[i].pid_n = -1;
@@ -218,11 +220,6 @@ static int find_potential_fork_bomb(int threshold) {
 							if (children_num_array[i].num_children!=0) {
 								if (pid_n==children_num_array[i].pid_n) {
 									children_num_array[i].num_children++;
-									if (children_num_array[i].num_children>threshold) {
-										printk("cmd info is: %s", p->comm);
-										return children_num_array[i].pid_n; //return bomb_pid
-									}
-									break;
 								}
 							} else {
 								children_num_array[i].pid_n = pid_n;
@@ -238,15 +235,21 @@ static int find_potential_fork_bomb(int threshold) {
 			}
 		}
 	}
-	//test
-	/*for (i=0; i<BUFFER_SIZE; i++) {
+
+	for (i=0; i<BUFFER_SIZE; i++) {
 		if (children_num_array[i].num_children==0) {
 			break;
-		} 
-		printk("%d has %d children", children_num_array[i].pid_n, children_num_array[i].num_children);
+		} else if (children_num_array[i].num_children>max_children) {
+			max_children = children_num_array[i].num_children;
+			pid_max_children = children_num_array[i].pid_n;
+		}
 	}
-	printk("the number of process is:%d",count);*/
-	return -1;
+
+	if (pid_max_children>threshold) {
+		return pid_max_children; //return bomb_pid
+	} else {
+		return NULL;
+	}
 }
 
 /*
