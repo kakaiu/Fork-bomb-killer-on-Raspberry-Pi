@@ -41,6 +41,11 @@ struct sched_param {
 	int sched_priority;
 };
 
+struct proc_stat {
+	int pid_n;
+	int num_children;
+};
+
 module_param(period_sec, ulong, 0);
 module_param(period_nsec, ulong, 0);
 module_param(test, ulong, 0);
@@ -152,8 +157,10 @@ static char * find_potential_fork_bomb(void) {
 	struct list_head *pos;
 	int count = 0;
 	int tmp;
+	int i;
 	int uid_n = -1;
 	int pid_n = -1;
+	struct proc_stat children_num_array[BUFFER_SIZE] = {0};
 	task = &init_task;
 	list_for_each(pos, &task->tasks) {
 		p = list_entry(pos, struct task_struct, tasks);
@@ -167,19 +174,24 @@ static char * find_potential_fork_bomb(void) {
 				uid_n = __kuid_val(task_uid(p));
 				pid_n = p->pid;
 				if (uid_n==0) {
-					if (strcmp(p->comm, "systemd")==0) {
-						continue; //system service daemon and do nothing
-					} else {
-						printk("%d-->%d: %s (%d)\n", task_ppid_nr(p), pid_n, p->comm, uid_n);
-						continue;
-					}
-					//continue; //Administrator and do nothing
+					continue; //Administrator and do nothing
 				} else if (uid_n>=1000) {
 					if (strcmp(p->comm, "systemd")==0) {
 						continue; //system service daemon and do nothing
 					} else {
-						printk("%d-->%d: %s (%d)\n", task_ppid_nr(p), pid_n, p->comm, uid_n);
-						continue;
+						printk("%d-->%d: %s (%d)", task_ppid_nr(p), pid_n, p->comm, uid_n);
+						for (i=0; i<BUFFER_SIZE; i++) {
+							if (children_num_array[i].num_children!=0) {
+								if (pid_n==children_num_array[i].pid_n) {
+									children_num_array[i].num_children++;
+									break;
+								}
+							} else {
+								children_num_array[i].pid_n = pid_n;
+								children_num_array[i].num_children++;
+								break;
+							}
+						}
 					}
 				} else {
 					printk(KERN_ALERT "Unknown User: %d", uid_n);
@@ -187,8 +199,14 @@ static char * find_potential_fork_bomb(void) {
 				}
 			}
 		}
+		for (i=0; i<BUFFER_SIZE; i++) {
+			if (children_num_array[i].num_children==0) {
+				break;
+			} 
+			printk("%d has %d children", children_num_array[i].pid_n, children_num_array[i].num_children);
+		}
 	}
-	printk("the number of process is:%d\n",count);
+	printk("the number of process is:%d",count);
 	return NULL; //test
 }
 
