@@ -324,7 +324,7 @@ static int do_kill_processes(void) {
 					printk(KERN_ALERT "force_run, can not kill");
 					//TODO: write report
 				} else {
-					printk(KERN_ALERT "not force_run, will kill it");
+					printk(KERN_ALERT "not force_run, kill it");
 					kill_pid(find_vpid(bomb_pid), SIGTERM, 1);
 				}
 			}

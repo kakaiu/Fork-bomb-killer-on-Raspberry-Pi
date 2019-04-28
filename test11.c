@@ -40,7 +40,7 @@ int main( int argc, char* argv[] ){
 
 	period = atoi(argv[1]);
 	cpuAffinity = atoi(argv[2]);
-
+	
 	slowBranch(period, cpuAffinity);
 	return 0;
 }
