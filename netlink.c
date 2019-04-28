@@ -19,6 +19,7 @@
 
 #define NETLINK_TEST 17 
 #define BUFFER_SIZE 1024
+#define PATH_BUFFER_SIZE 50
 #define UTIL_THRESHOLD 1250 // 80/100
 #define UTIL_PRECISION 1000
 #define FORK_NUM_THRESHOLD 200
@@ -119,7 +120,7 @@ static int do_analysis_proc_stat(int threshold) {
 				i++;
 				continue;
 			} else {
-				//printk(KERN_INFO "%s %d", token, i);
+				printk(KERN_INFO "token: %s %d", token, i);
 				ret = kstrtol(token, 10, &split);
 				if(ret!=0) {
 					printk(KERN_ALERT "Conversion1 error!!");
@@ -252,7 +253,7 @@ static char* get_cmdline_by_pidn(int pid_n) {
 	mm_segment_t fs;
 	char* cur = NULL;
 	int i = 0;
-	for (i=0; i<BUFFER_SIZE; i++) { //refresh
+	for (i=0; i<PATH_BUFFER_SIZE; i++) { //refresh
 		path_buffer[i] = '\0';
 	}
 
@@ -266,7 +267,7 @@ static char* get_cmdline_by_pidn(int pid_n) {
 	} else {
 		fs = get_fs();
 		set_fs(get_ds());
-		kernel_read(f, read_cmdline_buffer, BUFFER_SIZE, &f->f_pos);
+		kernel_read(f, read_cmdline_buffer, PATH_BUFFER_SIZE, &f->f_pos);
 		set_fs(fs);
 		filp_close(f, NULL);
 		cur = read_cmdline_buffer;
