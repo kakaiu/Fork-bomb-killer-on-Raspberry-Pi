@@ -251,6 +251,7 @@ static char* get_cmdline_by_pidn(int pid_n) {
 	struct file *f;
 	mm_segment_t fs;
 	char* cur = NULL;
+	int i = 0;
 	for (i=0; i<BUFFER_SIZE; i++) { //refresh
 		path_buffer[i] = '\0';
 	}
