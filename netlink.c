@@ -221,7 +221,7 @@ static int find_potential_fork_bomb(int threshold) {
 								if (pid_n==children_num_array[i].pid_n) {
 									children_num_array[i].num_children++;
 									if (children_num_array[i].num_children>threshold) {
-										printk("cmd info is: %d", p->comm);
+										printk("cmd info is: %s", p->comm);
 										return children_num_array[i].pid_n; //return bomb_pid
 									}
 									break;
