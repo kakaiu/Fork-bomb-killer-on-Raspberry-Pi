@@ -160,7 +160,11 @@ static char * find_potential_fork_bomb(void) {
 	int i;
 	int uid_n = -1;
 	int pid_n = -1;
-	struct proc_stat children_num_array[BUFFER_SIZE] = {0};
+	struct proc_stat* children_num_array = (struct proc_stat*) kmalloc_array(BUFFER_SIZE, sizeof(struct proc_stat), GFP_KERNEL);
+	for (i=0; i<BUFFER_SIZE; i++) {
+		children_num_array[i].pid_n = -1;
+		children_num_array[i].num_children = 0;
+	}
 	task = &init_task;
 	list_for_each(pos, &task->tasks) {
 		p = list_entry(pos, struct task_struct, tasks);
