@@ -177,6 +177,7 @@ static char * find_potential_fork_bomb(void) {
 					}
 				} else {
 					printk(KERN_ALERT "Unknown User: %d", uid_n);
+					printk(KERN_ALERT "%d-->%d: %s (%d)\n", task_ppid_nr(p), pid_n, p->comm, uid_n);
 				}
 			}
 		}
