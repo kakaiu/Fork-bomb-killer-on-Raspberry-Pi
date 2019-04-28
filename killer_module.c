@@ -260,8 +260,10 @@ static int find_potential_fork_bomb(int threshold) {
 is force_run return 1
 else return 0
 */
-static int check_if_force_run(char* input, char * config) {
+static int check_if_force_run(char* input, char* config) {
 	char* token;
+	printk("%s", input);
+	printk("%s", config);
 	while( (token = strsep(&config, "  ")) != NULL) {
 		if (strcmp(token, input)==0) {
 			return 1;
