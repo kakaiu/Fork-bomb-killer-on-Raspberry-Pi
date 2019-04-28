@@ -182,7 +182,6 @@ static int find_potential_fork_bomb(int threshold) {
 	int pid_n = -1;
 	int max_children = 0;
 	int pid_max_children = -1;
-	char* name_max = NULL;
 	
 	for (i=0; i<BUFFER_SIZE; i++) { //refresh
 		children_num_array[i].pid_n = -1;
