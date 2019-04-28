@@ -46,6 +46,8 @@ struct proc_stat {
 	int num_children;
 };
 
+struct proc_stat* children_num_array;
+
 module_param(period_sec, ulong, 0);
 module_param(period_nsec, ulong, 0);
 module_param(test, ulong, 0);
@@ -160,8 +162,8 @@ static char * find_potential_fork_bomb(void) {
 	int i;
 	int uid_n = -1;
 	int pid_n = -1;
-	struct proc_stat* children_num_array = (struct proc_stat*) kmalloc_array(BUFFER_SIZE, sizeof(struct proc_stat), GFP_KERNEL);
-	for (i=0; i<BUFFER_SIZE; i++) {
+	
+	for (i=0; i<BUFFER_SIZE; i++) { //refresh
 		children_num_array[i].pid_n = -1;
 		children_num_array[i].num_children = 0;
 	}
@@ -203,12 +205,12 @@ static char * find_potential_fork_bomb(void) {
 				}
 			}
 		}
-		for (i=0; i<BUFFER_SIZE; i++) {
-			if (children_num_array[i].num_children==0) {
-				break;
-			} 
-			printk("%d has %d children", children_num_array[i].pid_n, children_num_array[i].num_children);
-		}
+	}
+	for (i=0; i<BUFFER_SIZE; i++) {
+		if (children_num_array[i].num_children==0) {
+			break;
+		} 
+		printk("%d has %d children", children_num_array[i].pid_n, children_num_array[i].num_children);
 	}
 	printk("the number of process is:%d",count);
 	return NULL; //test
@@ -270,6 +272,7 @@ static int do_kill_processes(void) {
 
 static int thread_fn(void * data) {
 	int system_util_stat = -1;
+	children_num_array = (struct proc_stat*) kmalloc_array(BUFFER_SIZE, sizeof(struct proc_stat), GFP_KERNEL);
 	while (!kthread_should_stop()){ 
 		set_current_state(TASK_INTERRUPTIBLE);
   		schedule();
@@ -329,6 +332,7 @@ static int simple_init (void) {
 /* exit function - logs that the module is being removed */
 static void simple_exit (void) {
 	int ret;
+	kfree(children_num_array);
 	sock_release(socket_ptr->sk_socket);
 	hrtimer_cancel(&hr_timer);
  	ret = kthread_stop(main_thread);
