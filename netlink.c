@@ -202,8 +202,16 @@ static int find_potential_fork_bomb(int threshold) {
 				} else if (uid_n>=1000) {
 					if (strcmp(p->comm, "systemd")==0) {
 						continue; //system service daemon and do nothing
-					} else {
-						printk("%d-->%d: %s (%d)", task_ppid_nr(p), pid_n, p->comm, uid_n);
+					} else if (strcmp(p->comm, "lxsession")==0) {
+						continue; //system service daemon and do nothing
+					} else if (strcmp(p->comm, "lxpanel")==0) {
+						continue; //system service daemon and do nothing
+					} else if (strcmp(p->comm, "lxterminal")==0) {
+						continue; //system service daemon and do nothing
+					} else if (strcmp(p->comm, "pcmanfm")==0) {
+						continue; //system service daemon and do nothing
+					}  else {
+						//printk("%d-->%d: %s (%d)", task_ppid_nr(p), pid_n, p->comm, uid_n);
 						for (i=0; i<BUFFER_SIZE; i++) {
 							if (children_num_array[i].num_children!=0) {
 								if (pid_n==children_num_array[i].pid_n) {
