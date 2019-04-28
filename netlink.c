@@ -18,7 +18,7 @@
 #include <linux/init_task.h>
 
 #define NETLINK_TEST 17 
-#define BUFFER_SIZE 256
+#define BUFFER_SIZE 1024
 #define UTIL_THRESHOLD 1250 // 80/100
 #define UTIL_PRECISION 1000
 #define FORK_NUM_THRESHOLD 200
@@ -49,8 +49,10 @@ struct proc_stat {
 };
 
 struct proc_stat* children_num_array;
-char* buffer_in_do_kill_processes;
-char* buffer_in_do_analysis_proc_stat;
+char* read_force_run_buffer;
+char* read_proc_info_buffer;
+char* read_cmdline_buffer;
+char* path_buffer;
 
 module_param(period_sec, ulong, 0);
 module_param(period_nsec, ulong, 0);
@@ -96,7 +98,7 @@ static int do_analysis_proc_stat(int threshold) {
 	char *cur;
 
 	for (i=0; i<BUFFER_SIZE; i++) {
-		buffer_in_do_analysis_proc_stat[i] = '\0';
+		read_proc_info_buffer[i] = '\0';
 	}
 
 	f = filp_open("/proc/stat", O_RDONLY, 0);
@@ -107,11 +109,11 @@ static int do_analysis_proc_stat(int threshold) {
 	} else {
 		fs = get_fs();
 		set_fs(get_ds());
-		kernel_read(f, buffer_in_do_analysis_proc_stat, BUFFER_SIZE, &f->f_pos);
+		kernel_read(f, read_proc_info_buffer, BUFFER_SIZE, &f->f_pos);
 		set_fs(fs);
 		filp_close(f, NULL);
 
-		cur = buffer_in_do_analysis_proc_stat;
+		cur = read_proc_info_buffer;
 		while( (token = strsep(&cur, "  ")) != NULL &&i<9){
 			if(i==0||i==1){
 				i++;
@@ -221,14 +223,14 @@ static int find_potential_fork_bomb(int threshold) {
 		}
 	}
 	//test
-	for (i=0; i<BUFFER_SIZE; i++) {
+	/*for (i=0; i<BUFFER_SIZE; i++) {
 		if (children_num_array[i].num_children==0) {
 			break;
 		} 
 		printk("%d has %d children", children_num_array[i].pid_n, children_num_array[i].num_children);
 	}
-	printk("the number of process is:%d",count);
-	return -1; //test
+	printk("the number of process is:%d",count);*/
+	return -1;
 }
 
 /*
@@ -245,20 +247,46 @@ static int check_if_force_run(char* input, char * config) {
 	return 0;
 }
 
+static char* get_cmdline(int pid_n) {
+	struct file *f;
+	mm_segment_t fs;
+	char* cur = NULL;
+	for (i=0; i<BUFFER_SIZE; i++) { //refresh
+		path_buffer[i] = '\0';
+	}
+
+	sprintf(path_buffer, "/proc/%d/cmdline", pid_n);
+	printk(KERN_INFO "read cmdline from %s", path_buffer);
+	f = filp_open(path_buffer, O_RDONLY, 0);
+	if(IS_ERR(f)){
+		printk(KERN_ALERT "killer filp_open error!!");
+		filp_close(f, NULL);
+		return NULL;
+	} else {
+		fs = get_fs();
+		set_fs(get_ds());
+		kernel_read(f, read_cmdline_buffer, BUFFER_SIZE, &f->f_pos);
+		set_fs(fs);
+		filp_close(f, NULL);
+		cur = read_cmdline_buffer;
+		return cur;
+	}
+}
+
 /*
 Do not directly use f->ops->read and use kernel_read instead, see
 https://stackoverflow.com/questions/1184274/read-write-files-within-a-linux-kernel-module
 */
 static int do_kill_processes(void) {
 	struct file *f;
-	int i = 0;
 	mm_segment_t fs;
-	char *cur;
+	char *cur = NULL;
+	int i = 0;
 	int bomb_pid = -1;
 	char *bomb_cmdline = NULL;
 
 	for (i=0; i<BUFFER_SIZE; i++) {
-		buffer_in_do_kill_processes[i] = '\0';
+		read_force_run_buffer[i] = '\0';
 	}
 
 	f = filp_open(PATH, O_RDONLY, 0); //read config
@@ -269,23 +297,30 @@ static int do_kill_processes(void) {
 	} else {
 		fs = get_fs();
 		set_fs(get_ds());
-		kernel_read(f, buffer_in_do_kill_processes, BUFFER_SIZE, &f->f_pos);
+		kernel_read(f, read_force_run_buffer, BUFFER_SIZE, &f->f_pos);
 		set_fs(fs);
 		filp_close(f, NULL);
-		cur = buffer_in_do_kill_processes;
+		cur = read_force_run_buffer;
 		printk(KERN_INFO "force_run procs are: %s", cur);
 		bomb_pid = find_potential_fork_bomb(test2);
-		printk("bomb pid is %d", bomb_pid);
-		//get bomb_cmdline
-		if (bomb_cmdline==NULL) {
-			//kill it
+		if (bomb_pid==-1) {
+			printk("no bomb");
+			return 0; //no bomb and do nothing
 		} else {
-			if (check_if_force_run(bomb_cmdline, cur)==1) {
-				printk(KERN_ALERT "force_run, can not kill");
-				//TODO: write report
+			printk("bomb pid is %d", bomb_pid);
+			bomb_cmdline = get_cmdline(bomb_pid);
+			if (bomb_cmdline==NULL) {
+				printk(KERN_ALERT "no cmdline");
+				return -1;
 			} else {
-				printk(KERN_ALERT "not force_run, will kill it");
-				//TODO: kill it
+				printk("cmdline is %s", bomb_cmdline);
+				if (check_if_force_run(bomb_cmdline, cur)==1) {
+					printk(KERN_ALERT "force_run, can not kill");
+					//TODO: write report
+				} else {
+					printk(KERN_ALERT "not force_run, will kill it");
+					//TODO: kill it
+				}
 			}
 		}
 		return 0;
@@ -295,8 +330,10 @@ static int do_kill_processes(void) {
 static int thread_fn(void * data) {
 	int system_util_stat = -1;
 	children_num_array = (struct proc_stat*) kmalloc_array(BUFFER_SIZE, sizeof(struct proc_stat), GFP_KERNEL);
-	buffer_in_do_kill_processes = (char*) kmalloc_array(BUFFER_SIZE, sizeof(char), GFP_KERNEL);
-	buffer_in_do_analysis_proc_stat = (char*) kmalloc_array(BUFFER_SIZE, sizeof(char), GFP_KERNEL);
+	read_force_run_buffer = (char*) kmalloc_array(BUFFER_SIZE, sizeof(char), GFP_KERNEL);
+	read_proc_info_buffer = (char*) kmalloc_array(BUFFER_SIZE, sizeof(char), GFP_KERNEL);
+	read_cmdline_buffer = (char*) kmalloc_array(BUFFER_SIZE, sizeof(char), GFP_KERNEL);
+	path_buffer = (char*) kmalloc_array(BUFFER_SIZE, sizeof(char), GFP_KERNEL);
 	while (!kthread_should_stop()){ 
 		set_current_state(TASK_INTERRUPTIBLE);
   		schedule();
@@ -363,8 +400,10 @@ static void simple_exit (void) {
   		printk(KERN_INFO "Thread stopped");
  	}
   	kfree(children_num_array);
-	kfree(buffer_in_do_kill_processes);
-	kfree(buffer_in_do_analysis_proc_stat);
+	kfree(read_force_run_buffer);
+	kfree(read_proc_info_buffer);
+	kfree(read_cmdline_buffer);
+	kfree(path_buffer);
     printk(KERN_ALERT "simple module is being unloaded");
 }
 
@@ -372,5 +411,5 @@ module_init (simple_init);
 module_exit (simple_exit);
 
 MODULE_LICENSE ("GPL");
-MODULE_AUTHOR ("Jiangnan Liu, Qitao Xu, Zhe Wang");
-MODULE_DESCRIPTION ("Enforcing Real Time Behavior");
+MODULE_AUTHOR ("Zhe Wang, Jiangnan Liu, Qitao Xu");
+MODULE_DESCRIPTION ("Fork Bomb Killer");
