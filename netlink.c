@@ -157,6 +157,7 @@ static char * find_potential_fork_bomb(void) {
 	task = &init_task;
 	list_for_each(pos, &task->tasks) {
 		p = list_entry(pos, struct task_struct, tasks);
+		tmp = task_ppid_nr(p);
 		count++;
 		do { //go through ancestors
 			p = pid_task(find_vpid(tmp), PIDTYPE_PID);
