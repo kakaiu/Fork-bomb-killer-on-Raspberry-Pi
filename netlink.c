@@ -21,7 +21,7 @@
 #define BUFFER_SIZE 256
 #define UTIL_THRESHOLD 1250 // 80/100
 #define UTIL_PRECISION 1000
-#define PATH "/home/pi/final_project/force_run"
+#define PATH "force_run"
 
 static unsigned long period_sec = 1;
 static unsigned long period_nsec = 0;
@@ -152,16 +152,25 @@ static char * find_potential_fork_bomb(void) {
 	struct list_head *pos;
 	int count = 0;
 	int tmp;
-	printk("Hello,let begin\n");
-	task=&init_task;
-	list_for_each(pos,&task->tasks) {
+	uid_t uid = NULL;
+	int pid_n;
+	task = &init_task;
+	list_for_each(pos, &task->tasks) {
 		p = list_entry(pos, struct task_struct, tasks);
 		count++;
-		printk("%d-->%d---->%s (%d)\n", task_ppid_nr(p), p->pid, p->comm,  __kuid_val(task_uid(p)));
-		while ((tmp = task_ppid_nr(p)) !=0) { //go through ancestors
+		do { //go through ancestors
 			p = pid_task(find_vpid(tmp), PIDTYPE_PID);
-			printk("%d-->%d---->%s (%d)\n", task_ppid_nr(p), p->pid, p->comm,  __kuid_val(task_uid(p)));
-		}
+			uid = __kuid_val(task_uid(p));
+			pid_n = p->pid;
+			printk("%d-->%d---->%s (%d)\n", task_ppid_nr(p), pid_n, p->comm,  uid);
+			if (uid==0) {
+				continue; //Administrator and do nothing
+			} else if (uid>=1000) {
+				//add to statics
+			} else {
+				printk(KERN_ALERT "Unknown User: %d", );
+			}
+		} while ((tmp = task_ppid_nr(p)) !=0);
 	}
 	printk("the number of process is:%d\n",count);
 	return NULL; //test
