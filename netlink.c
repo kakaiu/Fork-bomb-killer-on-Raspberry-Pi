@@ -152,7 +152,6 @@ static char * find_potential_fork_bomb(void) {
 	struct list_head *pos;
 	int count = 0;
 	int tmp;
-	uid_t uid = NULL;
 	int pid_n;
 	task = &init_task;
 	list_for_each(pos, &task->tasks) {
@@ -160,7 +159,7 @@ static char * find_potential_fork_bomb(void) {
 		count++;
 		do { //go through ancestors
 			p = pid_task(find_vpid(tmp), PIDTYPE_PID);
-			uid = __kuid_val(task_uid(p));
+			uid_t uid = __kuid_val(task_uid(task));
 			pid_n = p->pid;
 			printk("%d-->%d---->%s (%d)\n", task_ppid_nr(p), pid_n, p->comm,  uid);
 			if (uid==0) {
