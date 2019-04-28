@@ -21,11 +21,13 @@
 #define BUFFER_SIZE 256
 #define UTIL_THRESHOLD 1250 // 80/100
 #define UTIL_PRECISION 1000
+#define FORK_NUM_THRESHOLD 200
 #define PATH "/home/pi/final_project/force_run"
 
 static unsigned long period_sec = 1;
 static unsigned long period_nsec = 0;
 static unsigned long test = UTIL_THRESHOLD; //for test
+static unsigned long test2 = FORK_NUM_THRESHOLD; //for test
 
 long prev_idle = 0;
 long prev_total = 0;
@@ -51,6 +53,7 @@ struct proc_stat* children_num_array;
 module_param(period_sec, ulong, 0);
 module_param(period_nsec, ulong, 0);
 module_param(test, ulong, 0);
+module_param(test2, ulong, 0);
 
 static void netlink_recv_msg(struct sk_buff * skb) {
     struct nlmsghdr * nlh = NULL;
@@ -152,9 +155,12 @@ static int do_analysis_proc_stat(int threshold) {
 	}
 }
 
-//return potential fork bomb
+/*
+return pid for any potential bomb
+return -1 for no bomb 
+*/
 //https://blog.csdn.net/qq_24521983/article/details/53582462
-static char * find_potential_fork_bomb(void) {
+static int find_potential_fork_bomb(int threshold) {
 	struct task_struct *task, *p;
 	struct list_head *pos;
 	int count = 0;
@@ -190,6 +196,9 @@ static char * find_potential_fork_bomb(void) {
 							if (children_num_array[i].num_children!=0) {
 								if (pid_n==children_num_array[i].pid_n) {
 									children_num_array[i].num_children++;
+									if (children_num_array[i].num_children>threshold) {
+										return children_num_array[i].pid_n; //return bomb_pid
+									}
 									break;
 								}
 							} else {
@@ -206,6 +215,8 @@ static char * find_potential_fork_bomb(void) {
 			}
 		}
 	}
+	/*
+	//test
 	for (i=0; i<BUFFER_SIZE; i++) {
 		if (children_num_array[i].num_children==0) {
 			break;
@@ -213,7 +224,8 @@ static char * find_potential_fork_bomb(void) {
 		printk("%d has %d children", children_num_array[i].pid_n, children_num_array[i].num_children);
 	}
 	printk("the number of process is:%d",count);
-	return NULL; //test
+	*/
+	return -1; //test
 }
 
 /*
@@ -239,6 +251,7 @@ static int do_kill_processes(void) {
 	char buffer[BUFFER_SIZE] = {'\0'};
 	mm_segment_t fs;
 	char *cur;
+	int bomb_pid = -1;
 	char *bomb_cmdline = NULL;
 
 	f = filp_open(PATH, O_RDONLY, 0); //read config
@@ -254,9 +267,11 @@ static int do_kill_processes(void) {
 		filp_close(f, NULL);
 		cur = buffer;
 		printk(KERN_INFO "force_run procs are: %s", cur);
-		bomb_cmdline = find_potential_fork_bomb();
+		bomb_pid = find_potential_fork_bomb(test2);
+		printk("bomb pid is %d", bomb_pid);
+		//get bomb_cmdline
 		if (bomb_cmdline==NULL) {
-			printk(KERN_INFO "No bomb detected");
+			//kill it
 		} else {
 			if (check_if_force_run(bomb_cmdline, cur)==1) {
 				printk(KERN_ALERT "force_run, can not kill");
