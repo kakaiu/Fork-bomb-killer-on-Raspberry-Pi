@@ -1,0 +1,1 @@
+cmd_/tmp/compile/zhe.wang/final_project/killer_module.ko := arm-linux-gnueabihf-ld -EL -r  -T ./scripts/module-common.lds --build-id  -o /tmp/compile/zhe.wang/final_project/killer_module.ko /tmp/compile/zhe.wang/final_project/killer_module.o /tmp/compile/zhe.wang/final_project/killer_module.mod.o ;  true
