@@ -121,7 +121,7 @@ static int do_analysis_proc_stat(int threshold) {
 				i++;
 				continue;
 			} else {
-				printk(KERN_INFO "token: %s %d", token, i);
+				//printk(KERN_INFO "token: %s %d", token, i);
 				ret = kstrtol(token, 10, &split);
 				if(ret!=0) {
 					printk(KERN_ALERT "Conversion1 error!!");
@@ -325,7 +325,7 @@ static int do_kill_processes(void) {
 					//TODO: write report
 				} else {
 					printk(KERN_ALERT "not force_run, will kill it");
-					//TODO: kill it
+					kill_pid(find_vpid(bomb_pid), SIGTERM, 1);
 				}
 			}
 		}
