@@ -11,6 +11,7 @@
 static int slowBranch(int cpuAffinity){
 	cpu_set_t set;
 	CPU_ZERO(&set);
+	fork();
 	CPU_SET(cpuAffinity, &set);
 	if (sched_setaffinity(getpid(), sizeof(set), &set) == -1){
 		exit(-1);
