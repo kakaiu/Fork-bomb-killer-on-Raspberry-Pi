@@ -1,1 +1,1 @@
-obj-m := netlink.o
+obj-m := killer_module.o

@@ -300,6 +300,7 @@ static char* get_cmdline_by_pidn(int pid_n) {
 static int do_write_report(int pid_not_kill) {
 	struct file *f;
 	mm_segment_t fs;
+	int i = 0;
 
 	for (i=0; i<BUFFER_SIZE; i++) {
 		write_report_buffer[i] = '\0';
@@ -334,7 +335,6 @@ static int do_kill_processes(void) {
 	char *bomb_cmdline = NULL;
 	struct task_struct *task, *p, *bomb_task;
 	struct list_head *pos;
-	char* report = NULL;
 
 	for (i=0; i<BUFFER_SIZE; i++) {
 		read_force_run_buffer[i] = '\0';
